@@ -105,7 +105,7 @@ spec:
       managementState: Managed
       nim:
         managementState: Removed
-      rawDeploymentServiceConfig: Headless
+      rawDeploymentServiceConfig: Headed
       wva:
         managementState: Removed
     kueue:
