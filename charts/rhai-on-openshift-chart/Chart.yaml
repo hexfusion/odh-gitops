@@ -11,3 +11,8 @@ keywords:
   - ai
   - rhaii
   - rhai
+dependencies:
+  - name: grid-enrollment
+    version: "0.1.0"
+    repository: "file://../dependencies/grid-enrollment"
+    condition: grid-enrollment.enabled

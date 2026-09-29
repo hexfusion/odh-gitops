@@ -1,0 +1,6 @@
+dependencies:
+- name: grid-enrollment
+  repository: file://../dependencies/grid-enrollment
+  version: 0.1.0
+digest: sha256:664a2713da59d2476128d32c7b03795bc89b8e6c8cec5a661c15bfd3427b60cb
+generated: "2026-09-29T16:06:02.985975619-04:00"

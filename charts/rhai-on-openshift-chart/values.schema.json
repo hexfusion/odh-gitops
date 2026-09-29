@@ -21,6 +21,16 @@
       "default": false,
       "description": "Skip CRD existence check - render all CRs regardless. Set to true for ArgoCD or when running helm multiple times."
     },
+    "grid-enrollment": {
+      "type": "object",
+      "description": "AI Grid enrollment service subchart. See charts/dependencies/grid-enrollment for its values.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
     "profile": {
       "type": "string",
       "enum": ["default", "maas", "ai-grid", "rhaii"],
