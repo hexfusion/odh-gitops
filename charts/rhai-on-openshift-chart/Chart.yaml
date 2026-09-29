@@ -16,3 +16,11 @@ dependencies:
     version: "0.1.0"
     repository: "file://../dependencies/grid-enrollment"
     condition: grid-enrollment.enabled
+  - name: grid-operator
+    version: "0.1.4"
+    repository: "file://../dependencies/grid-operator"
+    condition: grid-operator.enabled
+  - name: praxis-gateway
+    version: "0.1.4"
+    repository: "file://../dependencies/praxis-gateway"
+    condition: praxis-gateway.enabled

@@ -26,6 +26,76 @@ metadata:
     app.kubernetes.io/component: enrollment
 
 ---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grid-operator
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/clusterrole-crd.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: grid-operator-crd
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups: ["grid.praxis-proxy.io"]
+    resources:
+      - agenttoolproviders
+      - gridnetworks
+      - inferenceproviders
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["grid.praxis-proxy.io"]
+    resources:
+      - gridsites
+    verbs: ["get", "list", "watch", "patch", "create", "update"]
+  - apiGroups: ["grid.praxis-proxy.io"]
+    resources:
+      - agenttoolproviders/status
+      - gridnetworks/status
+      - gridsites/status
+      - inferenceproviders/status
+    verbs: ["get", "patch"]
+
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/clusterrole-resources.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: grid-operator-resources
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "patch"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get"]
+  - apiGroups: ["events.k8s.io"]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "patch", "update"]
+
+---
 # Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/auth-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -45,6 +115,49 @@ subjects:
   - kind: ServiceAccount
     name: grid-enrollment
     namespace: default
+
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/clusterrolebinding-crd.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grid-operator-crd
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+subjects:
+  - kind: ServiceAccount
+    name: grid-operator
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: grid-operator-crd
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/rolebindings-resources.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: grid-operator-resources
+  namespace: default
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+subjects:
+  - kind: ServiceAccount
+    name: grid-operator
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: grid-operator-resources
+  apiGroup: rbac.authorization.k8s.io
 
 ---
 # Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/service.yaml
@@ -71,6 +184,52 @@ spec:
       port: 8443
       targetPort: https
       protocol: TCP
+
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/service-metrics.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grid-operator-metrics
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: release-test
+
+---
+# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grid-gateway
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "0.4.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: "ClusterIP"
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: "TCP"
+  selector:
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: release-test
 
 ---
 # Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/deployment.yaml
@@ -169,6 +328,150 @@ spec:
         - name: grid-tls
           secret:
             secretName: enrollment-serving-tls
+
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grid-operator
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: grid-operator
+      app.kubernetes.io/instance: release-test
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: release-test
+        app.kubernetes.io/name: grid-operator
+    spec:
+      serviceAccountName: grid-operator
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: operator
+          image: ghcr.io/praxis-proxy/grid-operator:v0.1.4
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: GRID_SWIM_BIND_ADDR
+              value: "0.0.0.0:7946"
+            - name: GRID_SWIM_ADVERTISE_ADDR
+              value: "$(POD_IP):7946"
+            - name: GRID_GATEWAY_SERVICE_NAME
+              value: "grid-gateway"
+            - name: GRID_METRICS_ADDR
+              value: "0.0.0.0:9090"
+            - name: RUST_LOG
+              value: "info"
+          ports:
+            - name: swim-udp
+              containerPort: 7946
+              protocol: UDP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grid-gateway
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "0.4.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: praxis-gateway
+      app.kubernetes.io/instance: release-test
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: release-test
+        app.kubernetes.io/name: praxis-gateway
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: praxis
+          image: ghcr.io/praxis-proxy/ai:0.4.0
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --config
+            - /etc/praxis/praxis.yaml
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: "TCP"
+          readinessProbe:
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            tcpSocket:
+              port: http
+          livenessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            tcpSocket:
+              port: http
+          volumeMounts:
+            - name: config
+              mountPath: /etc/praxis
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: "grid-gateway-config"
+            items:
+              - key: "praxis.yaml"
+                path: "praxis.yaml"
 
 ---
 # Source: rhai-on-openshift-chart/templates/operator/dscinitialization.yaml
@@ -355,6 +658,62 @@ subjects:
   - kind: ServiceAccount
     name: grid-enrollment-ca-bootstrap
     namespace: default
+
+---
+# Source: rhai-on-openshift-chart/charts/grid-operator/templates/tests/operator-ready.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grid-operator-test
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: grid-operator
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "v0.1.4"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: readiness-check
+      image: busybox:1.37
+      command:
+        - sh
+        - -c
+        - |
+          wget -qO- --timeout=5 \
+            http://grid-operator-metrics:9090/readyz
+
+---
+# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/tests/gateway-ready.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grid-gateway-test
+  labels:
+    helm.sh/chart: HELM_CHART_VERSION_REDACTED
+    app.kubernetes.io/name: praxis-gateway
+    app.kubernetes.io/instance: release-test
+    app.kubernetes.io/version: "0.4.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: connectivity-check
+      image: busybox:1.37
+      command:
+        - sh
+        - -c
+        - |
+          wget -qO /dev/null --timeout=5 \
+            http://grid-gateway:8080/ \
+            2>&1 || true
+          nc -z -w5 grid-gateway 8080
 
 ---
 # Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/certs/ca-bootstrap-job.yaml
