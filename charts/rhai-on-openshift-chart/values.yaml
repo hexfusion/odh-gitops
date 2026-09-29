@@ -120,6 +120,10 @@ components:
         managementState:
       batchGateway:
         managementState:
+      # AI Grid sub-component (AI Grid CRDs). Omitted from the DSC unless set,
+      # since operators without the field reject it.
+      # aiGrid:
+      #   managementState: Managed
     # -- Gateway and GatewayClass resources for MaaS (created independently of DSC)
     modelsAsAService:
       # -- GatewayClass configuration for the LLMInferenceService.
