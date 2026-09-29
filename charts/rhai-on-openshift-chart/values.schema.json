@@ -585,6 +585,16 @@
                 }
               },
               "additionalProperties": false
+            },
+            "aiGrid": {
+              "type": "object",
+              "description": "AI Grid sub-component",
+              "properties": {
+                "managementState": {
+                  "$ref": "#/definitions/defaultManagementState"
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false
