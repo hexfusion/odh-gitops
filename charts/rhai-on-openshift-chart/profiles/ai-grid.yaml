@@ -1,0 +1,19 @@
+# AI Grid profile - MaaS plus AI Grid multi-cluster routing
+# Enables AIGateway with modelsAsAService and aiGrid + KServe for inference.
+# Dependencies auto-installed: cert-manager, leader-worker-set, RHCL/Kuadrant
+components:
+  aigateway:
+    dependencies:
+      certManager: true
+      leaderWorkerSet: true
+      rhcl: true
+    dsc:
+      managementState: Managed
+      modelsAsAService:
+        managementState: Managed
+      aiGrid:
+        managementState: Managed
+  kserve:
+    dsc:
+      managementState: Managed
+      rawDeploymentServiceConfig: Headed
