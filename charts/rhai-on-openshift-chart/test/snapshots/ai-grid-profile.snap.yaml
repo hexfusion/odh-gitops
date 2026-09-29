@@ -11,18 +11,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 
 ---
-# Source: rhai-on-openshift-chart/templates/dependencies/job-set/operator.yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: openshift-jobset-operator
-  annotations:
-    helm.sh/resource-policy: keep
-  labels:
-    helm.sh/chart: HELM_CHART_VERSION_REDACTED
-    app.kubernetes.io/managed-by: Helm
-
----
 # Source: rhai-on-openshift-chart/templates/dependencies/leader-worker-set/operator.yaml
 apiVersion: v1
 kind: Namespace
@@ -94,7 +82,7 @@ spec:
         managementState: Removed
       managementState: Managed
       modelsAsAService:
-        managementState: Managed
+        managementState: Removed
     aipipelines:
       managementState: Removed
     dashboard:
@@ -102,10 +90,10 @@ spec:
     feastoperator:
       managementState: Removed
     kserve:
-      managementState: Managed
+      managementState: Removed
       nim:
         managementState: Removed
-      rawDeploymentServiceConfig: Headed
+      rawDeploymentServiceConfig: Headless
       wva:
         managementState: Removed
     kueue:
@@ -136,93 +124,6 @@ spec:
     workbenches:
       managementState: Removed
       workbenchNamespace: opendatahub
-
----
-# Source: rhai-on-openshift-chart/templates/dependencies/gateway/kserve-gatewayclass.yaml
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: openshift-ai-inference
-  namespace: openshift-ingress
-  labels:
-    helm.sh/chart: HELM_CHART_VERSION_REDACTED
-    app.kubernetes.io/managed-by: Helm
-    istio.io/rev: openshift-gateway
-spec:
-  gatewayClassName: openshift-ai-inference
-  listeners:
-  - allowedRoutes:
-      namespaces:
-        from: Selector
-        selector:
-          matchLabels:
-            maas.opendatahub.io/gateway-access: "true"
-    name: https
-    port: 443
-    protocol: HTTPS
-
----
-# Source: rhai-on-openshift-chart/templates/dependencies/gateway/maas.yaml
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: maas-default-gateway
-  namespace: openshift-ingress
-  labels:
-    helm.sh/chart: HELM_CHART_VERSION_REDACTED
-    app.kubernetes.io/managed-by: Helm
-  annotations:
-    opendatahub.io/managed: "false"
-    security.opendatahub.io/authorino-tls-bootstrap: "true"
-spec:
-  gatewayClassName: maas-gateway-class
-  listeners:
-  - allowedRoutes:
-      namespaces:
-        from: Selector
-        selector:
-          matchLabels:
-            maas.opendatahub.io/gateway-access: "true"
-    name: https
-    port: 443
-    protocol: HTTPS
-
----
-# Source: rhai-on-openshift-chart/templates/dependencies/gateway/kserve-gatewayclass.yaml
-apiVersion: gateway.networking.k8s.io/v1
-kind: GatewayClass
-metadata:
-  name: openshift-ai-inference
-  labels:
-    helm.sh/chart: HELM_CHART_VERSION_REDACTED
-    app.kubernetes.io/managed-by: Helm
-spec:
-  controllerName: openshift.io/gateway-controller/v1
-
----
-# Source: rhai-on-openshift-chart/templates/dependencies/gateway/maas.yaml
-apiVersion: gateway.networking.k8s.io/v1
-kind: GatewayClass
-metadata:
-  name: maas-gateway-class
-  labels:
-    helm.sh/chart: HELM_CHART_VERSION_REDACTED
-    app.kubernetes.io/managed-by: Helm
-spec:
-  controllerName: openshift.io/gateway-controller/v1
-
----
-# Source: rhai-on-openshift-chart/templates/dependencies/job-set/config.yaml
-apiVersion: operator.openshift.io/v1
-kind: JobSetOperator
-metadata:
-  name: cluster
-  labels:
-    helm.sh/chart: HELM_CHART_VERSION_REDACTED
-    app.kubernetes.io/managed-by: Helm
-spec:
-  logLevel: Normal
-  operatorLogLevel: Normal
 
 ---
 # Source: rhai-on-openshift-chart/templates/dependencies/rhcl/config.yaml
@@ -261,21 +162,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 spec:
   upgradeStrategy: Default
-
----
-# Source: rhai-on-openshift-chart/templates/dependencies/job-set/operator.yaml
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  name: job-set
-  namespace: openshift-jobset-operator
-  labels:
-    helm.sh/chart: HELM_CHART_VERSION_REDACTED
-    app.kubernetes.io/managed-by: Helm
-spec:
-  upgradeStrategy: Default
-  targetNamespaces:
-    - openshift-jobset-operator
 
 ---
 # Source: rhai-on-openshift-chart/templates/dependencies/leader-worker-set/operator.yaml
@@ -335,23 +221,6 @@ spec:
   source: redhat-operators
   sourceNamespace: openshift-marketplace
 
-
----
-# Source: rhai-on-openshift-chart/templates/dependencies/job-set/operator.yaml
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: job-set
-  namespace: openshift-jobset-operator
-  labels:
-    helm.sh/chart: HELM_CHART_VERSION_REDACTED
-    app.kubernetes.io/managed-by: Helm
-spec:
-  channel: stable-v1.0
-  installPlanApproval: Automatic
-  name: job-set
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
 
 ---
 # Source: rhai-on-openshift-chart/templates/dependencies/leader-worker-set/operator.yaml

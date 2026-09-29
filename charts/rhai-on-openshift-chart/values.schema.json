@@ -55,7 +55,7 @@
       "type": "string",
       "enum": ["default", "maas", "ai-grid", "rhaii"],
       "default": "default",
-      "description": "Deploy profile that sets default component managementStates. 'default' keeps all components Removed. 'maas' enables AIGateway with modelsAsAService + KServe for MaaS deployments. 'ai-grid' adds aiGrid to the 'maas' profile. 'rhaii' enables only KServe for inference/model serving. Explicit managementState values override the profile."
+      "description": "Deploy profile that sets default component managementStates. 'default' keeps all components Removed. 'maas' enables AIGateway with modelsAsAService + KServe for MaaS deployments. 'ai-grid' enables AIGateway with only the aiGrid sub-component. 'rhaii' enables only KServe for inference/model serving. Explicit managementState values override the profile."
     },
     "olm": {
       "type": "object",
