@@ -640,3 +640,8 @@ dependencies:
     #       enabled: true
     #     nodeStatusExporter:
     #       enabled: true
+
+# -- AI Grid enrollment service, installed as a subchart. See charts/dependencies/grid-enrollment.
+grid-enrollment:
+  # -- Install the AI Grid enrollment service
+  enabled: false

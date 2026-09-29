@@ -4,6 +4,12 @@
 
 A Helm chart for installing ODH/RHOAI dependencies and component configurations
 
+## Requirements
+
+| Repository | Name | Version |
+|------------|------|---------|
+| file://../dependencies/grid-enrollment | grid-enrollment | 0.1.0 |
+
 ## Values
 
 | Key | Type | Default | Description |
@@ -136,6 +142,8 @@ A Helm chart for installing ODH/RHOAI dependencies and component configurations
 | dependencies.tempo | object | `{"dependencies":{"opentelemetry":true},"enabled":"auto","olm":{"channel":"stable","name":"tempo-product","namespace":"openshift-tempo-operator"}}` | Tempo operator |
 | dependencies.tempo.dependencies | object | `{"opentelemetry":true}` | Dependencies required by tempo |
 | dependencies.tempo.enabled | string | `"auto"` | Enable tempo: auto (if needed), true (always), false (never) |
+| grid-enrollment | object | `{"enabled":false}` | AI Grid enrollment service, installed as a subchart. See charts/dependencies/grid-enrollment. |
+| grid-enrollment.enabled | bool | `false` | Install the AI Grid enrollment service |
 | labels | object | `{}` | Common labels applied to all resources |
 | olm.installPlanApproval | string | `"Automatic"` | Install plan approval mode (Automatic or Manual) |
 | olm.source | string | `"redhat-operators"` | Default catalog source for OLM subscriptions |
