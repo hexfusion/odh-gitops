@@ -83,11 +83,13 @@ charts:
           - 'components.aigateway.modelsAsAService.gateway.spec.listeners[0].allowedRoutes.namespaces={"from":"Selector","selector":{"matchLabels":{"maas.opendatahub.io/gateway-access":"true"}}}'
           - 'components.kserve.gateway.spec.listeners[0].allowedRoutes.namespaces={"from":"Selector","selector":{"matchLabels":{"maas.opendatahub.io/gateway-access":"true"}}}'
 
-      - name: grid-enrollment
+      - name: ai-grid-hub
         setFlags:
           - skipCrdCheck=true
+          - grid-operator.enabled=true
+          - praxis-gateway.enabled=true
+          - praxis-gateway.config.existingConfigMap=grid-gateway-config
           - grid-enrollment.enabled=true
-          - grid-enrollment.fullnameOverride=grid-enrollment
           - grid-enrollment.enrollment.authz=kube
           - grid-enrollment.enrollment.serviceAccount.create=true
           - grid-enrollment.db.type=external

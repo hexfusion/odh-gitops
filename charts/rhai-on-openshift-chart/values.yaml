@@ -641,7 +641,30 @@ dependencies:
     #     nodeStatusExporter:
     #       enabled: true
 
-# -- AI Grid enrollment service, installed as a subchart. See charts/dependencies/grid-enrollment.
+# =============================================================================
+# AI GRID - Optional subcharts vendored from github.com/praxis-proxy/grid.
+# Values under each key pass through to the subchart; see charts/dependencies/<name>.
+# =============================================================================
+# -- AI Grid enrollment service
 grid-enrollment:
   # -- Install the AI Grid enrollment service
   enabled: false
+  # -- Stable resource names, independent of the release name
+  fullnameOverride: grid-enrollment
+
+# -- AI Grid operator. Installs the AI Grid CRDs from the subchart crds/ directory.
+grid-operator:
+  # -- Install the AI Grid operator
+  enabled: false
+  # -- Stable resource names, independent of the release name
+  fullnameOverride: grid-operator
+  gateway:
+    # -- Gateway Service the operator discovers; matches praxis-gateway.fullnameOverride
+    serviceName: grid-gateway
+
+# -- AI Grid gateway (Praxis)
+praxis-gateway:
+  # -- Install the AI Grid gateway
+  enabled: false
+  # -- Stable resource names, independent of the release name
+  fullnameOverride: grid-gateway
