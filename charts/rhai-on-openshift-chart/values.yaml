@@ -643,7 +643,7 @@ dependencies:
 
 # =============================================================================
 # AI GRID - Optional subcharts vendored from github.com/praxis-proxy/grid.
-# Values under each key pass through to the subchart; see charts/dependencies/<name>.
+# Values under each key pass through to the subchart; see charts/<name> in this chart.
 # =============================================================================
 # -- AI Grid enrollment service
 grid-enrollment:
@@ -652,7 +652,8 @@ grid-enrollment:
   # -- Stable resource names, independent of the release name
   fullnameOverride: grid-enrollment
 
-# -- AI Grid operator. Installs the AI Grid CRDs from the subchart crds/ directory.
+# -- AI Grid operator. Its CRDs are owned by the aigateway aiGrid sub-component, not this chart;
+# render with skipCrds under Argo CD so the two do not fight over them.
 grid-operator:
   # -- Install the AI Grid operator
   enabled: false

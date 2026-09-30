@@ -147,7 +147,7 @@ A Helm chart for installing ODH/RHOAI dependencies and component configurations
 | grid-enrollment | object | `{"enabled":false,"fullnameOverride":"grid-enrollment"}` | AI Grid enrollment service |
 | grid-enrollment.enabled | bool | `false` | Install the AI Grid enrollment service |
 | grid-enrollment.fullnameOverride | string | `"grid-enrollment"` | Stable resource names, independent of the release name |
-| grid-operator | object | `{"enabled":false,"fullnameOverride":"grid-operator","gateway":{"serviceName":"grid-gateway"}}` | AI Grid operator. Installs the AI Grid CRDs from the subchart crds/ directory. |
+| grid-operator | object | `{"enabled":false,"fullnameOverride":"grid-operator","gateway":{"serviceName":"grid-gateway"}}` | AI Grid operator. Its CRDs are owned by the aigateway aiGrid sub-component, not this chart; render with skipCrds under Argo CD so the two do not fight over them. |
 | grid-operator.enabled | bool | `false` | Install the AI Grid operator |
 | grid-operator.fullnameOverride | string | `"grid-operator"` | Stable resource names, independent of the release name |
 | grid-operator.gateway.serviceName | string | `"grid-gateway"` | Gateway Service the operator discovers; matches praxis-gateway.fullnameOverride |
