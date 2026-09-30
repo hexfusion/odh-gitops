@@ -8,9 +8,9 @@ A Helm chart for installing ODH/RHOAI dependencies and component configurations
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../dependencies/grid-enrollment | grid-enrollment | 0.1.0 |
-| file://../dependencies/grid-operator | grid-operator | 0.1.4 |
-| file://../dependencies/praxis-gateway | praxis-gateway | 0.1.4 |
+|  | grid-enrollment | 0.1.0 |
+|  | grid-operator | 0.1.4 |
+|  | praxis-gateway | 0.1.4 |
 
 ## Values
 
