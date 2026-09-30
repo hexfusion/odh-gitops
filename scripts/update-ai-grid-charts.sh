@@ -1,6 +1,7 @@
 #!/bin/bash
-# Vendor the AI Grid charts from praxis-proxy/grid into charts/dependencies
-# and refresh the rhai-on-openshift-chart dependency versions, docs and snapshots.
+# Vendor the AI Grid charts from praxis-proxy/grid as unpacked subcharts of
+# rhai-on-openshift-chart, so installs need no `helm dependency build`, and
+# refresh the dependency versions, docs and snapshots.
 # Usage: ./scripts/update-ai-grid-charts.sh <git-ref>
 # Examples:
 #   ./scripts/update-ai-grid-charts.sh v0.2.0
@@ -14,8 +15,8 @@ YQ="${YQ:-yq}"
 CHARTS=(grid-enrollment grid-operator praxis-gateway)
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEPS_DIR="$ROOT/charts/dependencies"
 PARENT="$ROOT/charts/rhai-on-openshift-chart"
+DEPS_DIR="$PARENT/charts"
 
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -35,7 +36,6 @@ for chart in "${CHARTS[@]}"; do
   echo "  $chart $version"
 done
 
-helm dependency update "$PARENT" >/dev/null
 make -C "$ROOT" helm-docs >/dev/null
 make -C "$ROOT" chart-snapshots CHART_NAME=rhai-on-openshift-chart >/dev/null
 
