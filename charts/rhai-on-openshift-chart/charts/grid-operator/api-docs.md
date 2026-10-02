@@ -26,11 +26,31 @@ Kubernetes: `>=1.26.0-0`
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Pod affinity rules. |
 | commonLabels | object | `{}` | Labels added to all chart-managed resources. |
+| crds | object | `{"enabled":true,"keep":true}` | Grid CRDs. |
+| crds.enabled | bool | `true` | Install and upgrade the CRDs. Set false when the platform owns them, or for a second release in the cluster. |
+| crds.keep | bool | `true` | Keep the CRDs on helm uninstall and an Argo CD delete or prune. |
+| enrollment | object | `{"caBundle":{"configMap":"","key":"ca.crt","secret":""},"enabled":false,"gridCaBundle":{"configMap":"","key":"ca.crt","secret":""},"siteName":"","tokenSecretRef":{"key":"token","name":""},"url":""}` | Site auto-enroll on startup. |
+| enrollment.caBundle | object | `{"configMap":"","key":"ca.crt","secret":""}` | CA pinning the enrollment server, and the grid CA by default. With neither set, Secret grid-ca-bundle. |
+| enrollment.caBundle.configMap | string | `""` | ConfigMap holding the bundle. Set this or secret. |
+| enrollment.caBundle.key | string | `"ca.crt"` | Key holding the PEM bundle. |
+| enrollment.caBundle.secret | string | `""` | Secret holding the bundle. |
+| enrollment.enabled | bool | `false` | Enroll when the site identity Secret is absent. |
+| enrollment.gridCaBundle | object | `{"configMap":"","key":"ca.crt","secret":""}` | Grid CA anchor, when it differs from caBundle. |
+| enrollment.gridCaBundle.configMap | string | `""` | ConfigMap holding the grid CA. Set this or secret. |
+| enrollment.gridCaBundle.key | string | `"ca.crt"` | Key holding the PEM bundle. |
+| enrollment.gridCaBundle.secret | string | `""` | Secret holding the grid CA. |
+| enrollment.siteName | string | `""` | Site name the token pins, at most 51 characters. Defaults to swim.siteName. |
+| enrollment.tokenSecretRef | object | `{"key":"token","name":""}` | Secret holding the one-time site token. |
+| enrollment.tokenSecretRef.key | string | `"token"` | Key holding the token. |
+| enrollment.tokenSecretRef.name | string | `""` | Secret name. Defaults to grid-invite-<siteName>. |
+| enrollment.url | string | `""` | Enrollment service https base URL. Defaults to the in-cluster grid-enrollment Service in rbac.enrollmentNamespace, the hub's own. |
 | fullnameOverride | string | `""` | Override the fully qualified app name. |
-| gateway | object | `{"address":"","port":"","serviceName":""}` | Advertised gateway address configuration. |
+| gateway | object | `{"address":"","allowSystemNamespace":false,"namespace":"","port":"","serviceName":""}` | Advertised gateway address configuration. |
 | gateway.address | string | `""` | Gateway address override. |
+| gateway.allowSystemNamespace | bool | `false` | Allow gateway.namespace to be default, kube-*, or openshift-*. |
+| gateway.namespace | string | `""` | Namespace of the gateway Service. Empty uses the release namespace. Maps to GRID_GATEWAY_NAMESPACE. |
 | gateway.port | string | `""` | Gateway port for operator-to-gateway discovery. Maps to GRID_GATEWAY_PORT. |
-| gateway.serviceName | string | `""` | Gateway Kubernetes Service name for the operator to discover. Maps to GRID_GATEWAY_SERVICE_NAME. |
+| gateway.serviceName | string | `""` | Gateway Kubernetes Service name for the operator to discover. Maps to GRID_GATEWAY_SERVICE_NAME. Defaults to grid-gateway with enrollment on. |
 | health | object | `{"liveness":{"initialDelaySeconds":5,"periodSeconds":10},"readiness":{"initialDelaySeconds":5,"periodSeconds":10}}` | Probe timing configuration. |
 | health.liveness | object | `{"initialDelaySeconds":5,"periodSeconds":10}` | Liveness probe settings. |
 | health.liveness.initialDelaySeconds | int | `5` | Initial delay before the first liveness probe. |
@@ -57,8 +77,9 @@ Kubernetes: `>=1.26.0-0`
 | podAnnotations | object | `{}` | Annotations added to the operator pod template. |
 | podLabels | object | `{}` | Labels added to the operator pod template. |
 | priorityClassName | string | `""` | Priority class for the operator pod. |
-| rbac | object | `{"create":true}` | RBAC configuration. |
+| rbac | object | `{"create":true,"enrollmentNamespace":""}` | RBAC configuration. |
 | rbac.create | bool | `true` | Create ClusterRoles, ClusterRoleBindings, and RoleBindings. |
+| rbac.enrollmentNamespace | string | `""` | The grid-enrollment namespace. The render fails if the operator would get Secret access there. Defaults to grid-enrollment with enrollment on. |
 | replicaCount | int | `1` | Number of operator replicas. Must be 1 until multi-replica operation is qualified. |
 | resourceNamespaces | list | `[]` | Additional namespaces where the operator needs Secret, ConfigMap, Event, and Service access. The release namespace is always included. |
 | resources | object | `{}` | Container resource requests and limits. |
@@ -72,18 +93,22 @@ Kubernetes: `>=1.26.0-0`
 | serviceMonitor.labels | object | `{}` | Additional labels on the ServiceMonitor. |
 | serviceMonitor.namespace | string | `""` | ServiceMonitor namespace override. |
 | serviceMonitor.scrapeTimeout | string | `""` | Prometheus scrape timeout. |
-| swim | object | `{"advertiseAddress":"","bindAddress":"0.0.0.0:7946","seeds":"","service":{"annotations":{},"enabled":false,"externalTrafficPolicy":"","loadBalancerIP":"","port":7946,"type":"ClusterIP"},"siteName":""}` | SWIM protocol configuration. |
-| swim.advertiseAddress | string | `""` | Externally reachable SWIM advertise endpoint (ip:port, [ipv6]:port, or hostname:port). Defaults to Pod IP and bind port. Must be set when a LoadBalancer or NodePort Service fronts the SWIM port and remote peers connect through that address. |
+| signals | object | `{"advertiseAddress":"","enabled":false,"port":9091}` | mTLS signals endpoint, for a GridNetwork with signalTransport poll. |
+| signals.advertiseAddress | string | `""` | Signals endpoint gossiped to peers (ip:port, [ipv6]:port, or dns-name:port). Set it when swim.advertiseAddress is set or the Service is not a LoadBalancer. |
+| signals.enabled | bool | `false` | Serve signals on the SWIM Service. Needs swim.service.enabled and, for a LoadBalancer, mixed UDP and TCP support. |
+| signals.port | int | `9091` | Signals TCP port on the SWIM Service, gossiped to peers with its LoadBalancer address. |
+| swim | object | `{"advertiseAddress":"","bindAddress":"0.0.0.0:7946","requireKey":true,"seeds":"","service":{"annotations":{},"externalTrafficPolicy":"","loadBalancerIP":"","loadBalancerSourceRanges":[],"port":7946},"siteName":""}` | SWIM protocol configuration. |
+| swim.advertiseAddress | string | `""` | SWIM advertise endpoint (ip:port, [ipv6]:port, or hostname:port). Defaults to the LoadBalancer SWIM Service address, else the Pod IP. |
 | swim.bindAddress | string | `"0.0.0.0:7946"` | SWIM bind address (host:port). |
+| swim.requireKey | bool | `true` | Hold SWIM traffic until the GridNetwork key loads or the network declares none. false opts out. |
 | swim.seeds | string | `""` | Bootstrap SWIM seed endpoints (comma-separated ip:port, [ipv6]:port, or hostname:port). |
-| swim.service | object | `{"annotations":{},"enabled":false,"externalTrafficPolicy":"","loadBalancerIP":"","port":7946,"type":"ClusterIP"}` | SWIM Service (disabled by default). |
+| swim.service | object | `{"annotations":{},"externalTrafficPolicy":"","loadBalancerIP":"","loadBalancerSourceRanges":[],"port":7946}` | SWIM Service. |
 | swim.service.annotations | object | `{}` | Service annotations. |
-| swim.service.enabled | bool | `false` | Create a Service for the SWIM port. |
 | swim.service.externalTrafficPolicy | string | `""` | External traffic policy. Defaults to Local for LoadBalancer, omitted for ClusterIP and NodePort. |
-| swim.service.loadBalancerIP | string | `""` | Static IP for LoadBalancer type. |
+| swim.service.loadBalancerIP | string | `""` | Static LoadBalancer IP. Deprecated in Kubernetes, so prefer a metallb.io/loadBalancerIPs annotation. |
+| swim.service.loadBalancerSourceRanges | list | `[]` | Optional CIDRs allowed to reach the SWIM and signals LoadBalancer, where it enforces them. |
 | swim.service.port | int | `7946` | Service port number. |
-| swim.service.type | string | `"ClusterIP"` | Service type: ClusterIP, LoadBalancer, or NodePort. |
-| swim.siteName | string | `""` | Bootstrap SWIM site name override. |
+| swim.siteName | string | `""` | Bootstrap SWIM site name. Defaults to enrollment.siteName when enrollment is on. |
 | tolerations | list | `[]` | Pod tolerations. |
 | topologySpreadConstraints | list | `[]` | Topology spread constraints. |
 
