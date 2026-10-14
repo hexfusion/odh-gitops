@@ -168,10 +168,23 @@ charts:
           - 'components.aigateway.modelsAsAService.gateway.spec.listeners[0].allowedRoutes.namespaces={"from":"Selector","selector":{"matchLabels":{"maas.opendatahub.io/gateway-access":"true"}}}'
           - 'components.kserve.gateway.spec.listeners[0].allowedRoutes.namespaces={"from":"Selector","selector":{"matchLabels":{"maas.opendatahub.io/gateway-access":"true"}}}'
 
-      - name: ai-grid-hub
+      - name: ai-grid-removed
         setFlags:
           - skipCrdCheck=true
-          - grid-operator.enabled=true
+          - profile=ai-grid
+          - components.aigateway.dsc.aiGrid.managementState=Removed
+
+      - name: ai-grid-related-images
+        valuesFiles:
+          - charts/rhai-on-openshift-chart/test/values-ai-grid-images.yaml
+        setFlags:
+          - skipCrdCheck=true
+
+      - name: ai-grid-hub
+        setFlags:
+          - profile=ai-grid
+          - grid-enrollment.route.enabled=false
+          - skipCrdCheck=true
           - praxis-gateway.enabled=true
           - praxis-gateway.config.existingConfigMap=grid-gateway-config
           - grid-enrollment.enabled=true

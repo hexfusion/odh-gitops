@@ -221,6 +221,44 @@
           },
           "additionalProperties": false
         },
+        "enrollmentAdmins": {
+          "type": "object",
+          "properties": {
+            "subjects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "User",
+                      "Group",
+                      "ServiceAccount"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "not": {
+                      "pattern": "^system:(masters|authenticated|unauthenticated|serviceaccounts)(:.*)?$"
+                    }
+                  },
+                  "namespace": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
         "tokenAudience": {
           "type": "string",
           "minLength": 1,
@@ -241,12 +279,21 @@
         "replicaCount": {
           "type": "integer"
         },
+        "rotation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        },
         "certLifetimeSecs": {
           "type": [
             "string",
             "integer"
           ],
-          "description": "Leaf lifetime in seconds. Empty keeps the service default."
+          "description": "Leaf lifetime in seconds. Empty keeps the service default, 180 days."
         },
         "gridAdminTokens": {
           "type": "object",
@@ -308,6 +355,28 @@
         },
         "tolerations": {
           "type": "array"
+        },
+        "csrRecord": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "policy": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "signerName": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9.-]+/[A-Za-z0-9._-]+$"
+            }
+          }
         }
       },
       "additionalProperties": false
@@ -338,6 +407,12 @@
             },
             "storage": {
               "type": "string"
+            },
+            "pvcAnnotations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "resources": {
               "type": "object"
@@ -439,6 +514,11 @@
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 604800
+              },
+              "cluster": {
+                "type": "string",
+                "description": "ManagedCluster name to target when it differs from the site name.",
+                "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
               }
             }
           }
@@ -466,11 +546,52 @@
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 604800
+              },
+              "cluster": {
+                "type": "string",
+                "description": "ManagedCluster name to target when it differs from the site name.",
+                "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
               }
             }
           }
         }
       ]
+    },
+    "hubSite": {
+      "description": "Issue the hub's own site identity straight from the grid CA, so the hub never enrolls.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "Site name of the hub. Empty disables it.",
+          "type": "string",
+          "pattern": "^$|^[a-z0-9]([-a-z0-9]{0,49}[a-z0-9])?$"
+        },
+        "namespace": {
+          "description": "Namespace of the hub's grid operator, where the identity Secrets go. Must exist before install.",
+          "type": "string",
+          "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
+        },
+        "identitySecretName": {
+          "description": "Secret for the site identity.",
+          "type": "string",
+          "minLength": 1
+        },
+        "caSecretName": {
+          "description": "Secret for the grid CA beside the identity.",
+          "type": "string",
+          "minLength": 1
+        },
+        "swimKeySecretName": {
+          "description": "Secret for the grid's SWIM key, created once in the release and hub namespaces. Empty skips it.",
+          "type": "string"
+        },
+        "seedSecretName": {
+          "description": "Secret for the CA-signed seed that registers the hub's key so it can rotate.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "nameOverride": {
       "type": "string"
@@ -497,6 +618,38 @@
       "maxLength": 253,
       "pattern": "^$|^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?)*$",
       "description": "The enrollment name sites connect to: a serving cert name and the default route.host."
+    },
+    "log": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "type": "string",
+          "pattern": "^(?i)(off|error|warn|info|debug|trace)$",
+          "description": "Level for every module: off, error, warn, info, debug, or trace, in any case."
+        },
+        "filter": {
+          "type": "string",
+          "description": "Full RUST_LOG directive, such as info,enrollment=debug. When set, it replaces level."
+        }
+      }
+    },
+    "invitePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "clusterSet": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     }
   },
   "required": [

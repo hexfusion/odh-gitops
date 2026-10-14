@@ -15,11 +15,18 @@ commonLabels: {}
 image:
   # Enrollment app image. The same binary serves the API and runs the
   # `enrollment bootstrap` Job (the sar and bootstrap features, on by default).
-  repository: quay.io/praxis-proxy/grid-enrollment
+  repository: ghcr.io/praxis-proxy/grid-enrollment
   tag: ""            # defaults to .Chart.AppVersion
   digest: ""         # sha256:<64 hex>; when set, tag is ignored
   pullPolicy: IfNotPresent
 imagePullSecrets: []
+
+# -- Logging, rendered as RUST_LOG.
+log:
+  # -- Level for every module: error, warn, info, debug, or trace.
+  level: info
+  # -- Full RUST_LOG directive, such as "info,enrollment=debug". When set, it replaces level.
+  filter: ""
 
 # ------------------------------------------------------------------------------
 # Grid CA. Default: GENERATE on install (bootstrap Job). Escape hatch: provide.
@@ -34,7 +41,9 @@ ca:
   keySecretName: grid-ca-key      # kubernetes.io/tls: tls.crt + tls.key (signing key)
   bundleSecretName: grid-ca-bundle # Opaque: ca.crt (public trust anchor)
   # Replace an existing CA in place. Off by default: regenerating the CA
-  # invalidates every certificate it has issued.
+  # invalidates every certificate it has issued. If the CA key Secret is lost while
+  # the CA bundle still exists, bootstrap refuses to mint a new CA, since that would
+  # split the grid: restore the key from backup, or set this to start a new grid.
   forceRegenerate: false
   provided:
     # Reference to a pre-created {tls.crt,tls.key} Secret. Never inline the key
@@ -98,11 +107,35 @@ route:
 enrollment:
   replicaCount: 1
   listenAddr: "0.0.0.0:8443"
-  certLifetimeSecs: ""               # empty => service default (ENROLLMENT_CERT_LIFETIME_SECS)
+  certLifetimeSecs: ""               # empty => service default, 180 days (ENROLLMENT_CERT_LIFETIME_SECS)
+  rotation:
+    # -- Sites rotate their identity here with their current certificate over mutual
+    # TLS. A reencrypt Route drops that certificate, so the render refuses reencrypt
+    # while this is on. false refuses every rotation (503 rotation_disabled) for the
+    # whole grid; issued identities stay valid until they expire.
+    enabled: true
   # kube (default): SAR via TokenReview + SubjectAccessReview, the in-cluster path
   # (needs the sar-feature image and the auth-delegator RBAC this chart binds).
-  # local: the standalone grid-admin-token table, for non-kube deploys.
+  # local: the standalone grid-admin-token table, for non-kube deploys. The table has no
+  # roles, so every token in it may mint and revoke tokens and read and delete enrollments.
   authz: kube                        # kube | local
+  # Record each enrollment as a CertificateSigningRequest on this cluster, under
+  # signer grid.praxis.fast/site: created, approved on the invite's authority and
+  # completed with the issued certificate by the service, so every enrollment shows
+  # in kubectl get csr and the audit log. Needs authz=kube. The record never gates
+  # issue: a failed record is logged and the certificate stands.
+  csrRecord:
+    enabled: true
+    # Signer name the records are filed under, domain-qualified. Give each
+    # enrollment service on a cluster its own, since the admission policy below
+    # admits only this release's service for it.
+    signerName: grid.praxis.fast/site
+    policy:
+      # Two ValidatingAdmissionPolicies: only the service may file a request under
+      # the signer name, and the service may touch no other signer name. Required
+      # while the record is on. Needs admissionregistration.k8s.io/v1 (Kubernetes
+      # 1.30); on an older cluster turn the record off instead.
+      enabled: true
   # Audience a grid-admin token must be bound to under authz=kube, e.g.
   # kubectl create token <sa> --audience grid-enrollment --duration 10m.
   # Never an API-server audience (kubernetes, https://kubernetes.default.svc,
@@ -118,6 +151,11 @@ enrollment:
       # Create a ServiceAccount to mint grid-admin tokens from, and bind it.
       create: false
       name: grid-admin
+  # Who may delete a site's enrollment, which ends its rotations and releases its name.
+  # A Role of its own, since delete and mint together re-enroll an existing site's name.
+  enrollmentAdmins:
+    # RBAC subjects, e.g. [{kind: Group, name: grid-security}].
+    subjects: []
   gridAdminTokens:
     generate: true                   # the bootstrap Job creates a grid-admin-token Secret once
     existingSecretRef: ""            # BYO Secret with key "tokens" (name:token lines)
@@ -156,6 +194,9 @@ db:
     # image (image.pullPolicy=Never, kind/airgap) does not force Postgres to Never.
     pullPolicy: IfNotPresent
     storage: 8Gi
+    # The PVC holds every site record. A GitOps install annotates it so its tool never prunes
+    # or deletes it, e.g. argocd.argoproj.io/sync-options: Prune=false,Delete=false.
+    pvcAnnotations: {}
     resources: {}
     auth:
       database: enrollment
@@ -184,9 +225,40 @@ db:
     caConfigMapName: ""
     caConfigMapKey: ca.crt
 
-# -- Sites to invite, keyed by site name: network (default grid) and expiresInSecs. Each
-# run skips sites whose invite Secret exists. The older list of {siteName,
-# gridNetworkRef, expiresInSecs} still renders.
+# -- Sites to invite, keyed by site name: network (default grid), expiresInSecs, and
+# cluster when the ManagedCluster is named something other than the site. Each run skips
+# sites whose invite Secret exists. The older list of {siteName, gridNetworkRef,
+# expiresInSecs} still renders.
 # invites:
 #   site-a:
 #     network: grid
+#     cluster: prod-01
+
+# -- ACM Policy delivering each invited site its token, the CA bundle and the gossip key.
+# The site names come from `invites`, so they are not restated here.
+invitePolicy:
+  # -- Render the policy. Needs ACM on this cluster and the sites imported.
+  enabled: false
+  # -- Namespace on each site that its operator reads the Secrets from.
+  namespace: grid
+  # -- ManagedClusterSet the sites belong to. The binding is named for it.
+  clusterSet: default
+
+# -- The hub's own site identity, issued by the bootstrap Job straight from the grid
+# CA, so the hub never enrolls or needs an invite. It rotates like an enrolled site.
+# Delete the Secret and upgrade to re-issue it.
+hubSite:
+  # -- Hub site name. Empty disables it. Must not also be invited.
+  name: ""
+  # -- Namespace of the hub's grid operator. Must exist before install: the chart does not create it.
+  namespace: grid
+  # -- Secret the site identity is written to.
+  identitySecretName: grid-site-identity
+  # -- Secret the grid CA is written to beside it.
+  caSecretName: grid-ca
+  # -- Secret for the grid's SWIM key, created once here and in hubSite.namespace. Empty skips it.
+  swimKeySecretName: grid-swim-key
+  # -- Secret, in this namespace, for the seed that registers the hub's key so it can
+  # rotate. Bootstrap signs it with the CA key and the service applies only what verifies.
+  # A Secret, so replaying an old seed needs the Secret access that already reads the CA key.
+  seedSecretName: grid-reserved-seeds

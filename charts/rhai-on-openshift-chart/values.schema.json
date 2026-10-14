@@ -23,17 +23,7 @@
     },
     "grid-enrollment": {
       "type": "object",
-      "description": "AI Grid enrollment service subchart. See charts/dependencies/grid-enrollment for its values.",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": false
-        }
-      }
-    },
-    "grid-operator": {
-      "type": "object",
-      "description": "AI Grid operator subchart. See charts/dependencies/grid-operator for its values.",
+      "description": "Optional grid-enrollment subchart. See charts/grid-enrollment for its values.",
       "properties": {
         "enabled": {
           "type": "boolean",
@@ -43,7 +33,7 @@
     },
     "praxis-gateway": {
       "type": "object",
-      "description": "AI Grid gateway (Praxis) subchart. See charts/dependencies/praxis-gateway for its values.",
+      "description": "Optional praxis-gateway subchart. See charts/praxis-gateway for its values.",
       "properties": {
         "enabled": {
           "type": "boolean",
@@ -254,6 +244,33 @@
         }
       },
       "additionalProperties": false
+    },
+    "global": {
+      "type": "object",
+      "properties": {
+        "relatedImages": {
+          "type": "array",
+          "description": "Full image overrides shared by AI Grid subcharts (name/value entries).",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "value"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
     }
   },
   "definitions": {

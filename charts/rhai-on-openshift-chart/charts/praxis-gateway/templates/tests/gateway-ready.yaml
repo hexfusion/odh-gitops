@@ -21,7 +21,7 @@ spec:
       type: RuntimeDefault
   containers:
     - name: connectivity-check
-      image: busybox:1.37
+      image: {{ include "praxis-gateway.relatedImage" (dict "root" . "name" "RELATED_IMAGE_ODH_PRAXIS_AI_GRID_TEST_IMAGE") | default "busybox:1.37" | quote }}
       securityContext:
         allowPrivilegeEscalation: false
         capabilities:

@@ -204,12 +204,58 @@ with `--set components.aigateway.dependencies.leaderWorkerSet=true`. The profile
 listener configuration for both `aigateway` and `kserve` before it renders — see
 [Enable Models as Service](#enable-models-as-service) and [KServe Gateway](#kserve-gateway).
 
-
 Profiles are defined as YAML files in the [`profiles/`](profiles/) directory. See the [Contributing guide](../../CONTRIBUTING.md#adding-a-new-deploy-profile) for how to add new profiles.
 
 ### AI Grid
 
-The `ai-grid` profile sets the `aigateway` `aiGrid` sub-component, and the operator then owns the AI Grid CRDs. The optional `grid-operator`, `praxis-gateway` and `grid-enrollment` subcharts deploy the workloads. With Argo CD, render the grid charts with `skipCrds: true` so Argo CD and the operator do not both manage the CRDs. Helm prints subchart NOTES only with `--render-subchart-notes`; setup steps are in the grid installation docs.
+
+### AI Grid
+
+AI Grid is opt-in. The default profile leaves it disabled and omits `aiGrid` for compatibility
+with payloads that do not yet expose the field. `--set profile=ai-grid` explicitly sets AIGateway
+and its `aiGrid` sub-component to `Managed`; other sub-components remain `Removed`.
+An explicit `components.aigateway.dsc.aiGrid.managementState=Removed` overrides the profile.
+
+The AI Gateway operator owns the Grid operator and its CRDs (ai-gateway-operator PR #148).
+This chart does not install a second Grid operator. The profile requires an operator payload
+containing opendatahub-operator PR #4186; chart version `3.6.0` alone does not guarantee that payload.
+
+Gateway and enrollment are separate, optional workloads with site-specific configuration.
+They remain disabled by default. To enable both with the profile, start from
+[`values-ai-grid-hub.yaml`](../../docs/examples/values-ai-grid-hub.yaml), configure its hostname,
+ConfigMap and database Secret, then install with `-f docs/examples/values-ai-grid-hub.yaml`.
+Use a database provisioned for enrollment; do not point it at the MaaS database without a separate database/schema arrangement.
+Setting the DSC state to `Removed` stops operator-managed Grid resources; disable the two Helm
+`enabled` flags as well when removing gateway/enrollment. Helm subchart conditions are evaluated
+before profile templates, so `--set profile=ai-grid` alone deliberately does not enable them.
+
+The gateway/enrollment charts are version `0.2.0`, vendored from `praxis-proxy/grid@3359afdcddda926f3cdf986f5173f12b30b40aae`.
+The parent defaults to the Grid gateway image, rather than the generic Praxis AI image.
+Refresh with `make update-ai-grid-charts GRID_REF=<tag-or-sha>`; this reapplies the downstream
+image helper patch, updates the dependency lock, and regenerates docs and snapshots.
+
+Downstream builds can inject full image references through `global.relatedImages`, using the
+same `name`/`value` convention as the XKS chart. These overrides take precedence over subchart
+image repository/tag/digest settings and apply to both containers and bootstrap/invite Jobs.
+
+| Name | Image |
+|------|-------|
+| `RELATED_IMAGE_ODH_PRAXIS_AI_GRID_GATEWAY_IMAGE` | Grid gateway |
+| `RELATED_IMAGE_ODH_PRAXIS_AI_GRID_ENROLLMENT_IMAGE` | Enrollment service and Jobs |
+| `RELATED_IMAGE_ODH_PRAXIS_AI_GRID_POSTGRES_IMAGE` | Optional built-in PostgreSQL and database initialization |
+| `RELATED_IMAGE_ODH_PRAXIS_AI_GRID_OVERLAY_SYNC_IMAGE` | Optional gateway overlay-sync containers |
+| `RELATED_IMAGE_ODH_PRAXIS_AI_GRID_TEST_IMAGE` | Gateway Helm connectivity test (requires `sh`, `wget`, and `nc`) |
+
+```yaml
+global:
+  relatedImages:
+    - name: RELATED_IMAGE_ODH_PRAXIS_AI_GRID_GATEWAY_IMAGE
+      value: registry.example.com/rhai/grid-gateway@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+```
+
+The Grid operator image belongs to the platform payload. Override it through
+`operator.<odh|rhoai>.olm.config.env` with `RELATED_IMAGE_ODH_PRAXIS_AI_GRID_OPERATOR_IMAGE`
+when testing a custom payload, rather than setting a Helm-managed operator image.
 
 ### How profiles work
 

@@ -239,6 +239,7 @@ chart-snapshots: yq ## Create snapshots for chart(s). Use CHART_NAME=<name> for 
 	@./scripts/chart-snapshots.sh --generate $(if $(CHART_NAME),--chart $(CHART_NAME),)
 
 GRID_REPO ?= https://github.com/praxis-proxy/grid.git
+GRID_REF ?= 3359afdcddda926f3cdf986f5173f12b30b40aae
 .PHONY: update-ai-grid-charts
 update-ai-grid-charts: yq ## Vendor AI Grid charts from praxis-proxy/grid. Use GRID_REF=<tag|sha>, optional GRID_REPO=<url|path>
 	@YQ=$(YQ) GRID_REPO=$(GRID_REPO) ./scripts/update-ai-grid-charts.sh $(GRID_REF)
