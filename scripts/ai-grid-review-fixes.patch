@@ -74,7 +74,7 @@ diff --git a/charts/rhai-on-openshift-chart/charts/grid-enrollment/templates/enr
  {{- $subjects := $admins.subjects | default list }}
  {{- range $subjects }}
 -{{- if regexMatch "^system:(masters|authenticated|unauthenticated|serviceaccounts)(:.*)?$" .name }}
-+{{- if regexMatch "^system:(masters|authenticated|unauthenticated|serviceaccounts|nodes)(:.*)?$" .name }}
++{{- if regexMatch "^system:(masters|authenticated|unauthenticated|serviceaccounts|nodes|anonymous|bootstrappers)(:.*)?$" .name }}
  {{- fail (printf "enrollment.gridAdmins.subjects: %q is a cluster-wide group and would make it grid-admin" .name) }}
  {{- end }}
  {{- end }}
@@ -83,7 +83,7 @@ diff --git a/charts/rhai-on-openshift-chart/charts/grid-enrollment/templates/enr
  {{- $deleters := (.Values.enrollment.enrollmentAdmins | default dict).subjects | default list }}
  {{- range $deleters }}
 -{{- if regexMatch "^system:(masters|authenticated|unauthenticated|serviceaccounts)(:.*)?$" .name }}
-+{{- if regexMatch "^system:(masters|authenticated|unauthenticated|serviceaccounts|nodes)(:.*)?$" .name }}
++{{- if regexMatch "^system:(masters|authenticated|unauthenticated|serviceaccounts|nodes|anonymous|bootstrappers)(:.*)?$" .name }}
  {{- fail (printf "enrollment.enrollmentAdmins.subjects: %q is a cluster-wide group and would let it delete any site's enrollment" .name) }}
  {{- end }}
  {{- end }}
@@ -146,8 +146,12 @@ diff --git a/charts/rhai-on-openshift-chart/charts/grid-enrollment/templates/net
 new file mode 100644
 --- /dev/null
 +++ b/charts/rhai-on-openshift-chart/charts/grid-enrollment/templates/networkpolicy.yaml
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,60 @@
 +{{- include "grid-enrollment.normalize" . }}
++{{- $v := .Values }}
++{{- if and $v.networkPolicy.enabled (has $v.enrollment.service.type (list "LoadBalancer" "NodePort")) (not (include "grid-enrollment.routeEnabled" .)) (not $v.networkPolicy.from) }}
++{{- fail "networkPolicy.from requires explicit enrollment clients for LoadBalancer or NodePort without a Route" }}
++{{- end }}
 +{{- if .Values.networkPolicy.enabled }}
 +apiVersion: networking.k8s.io/v1
 +kind: NetworkPolicy
@@ -228,11 +232,22 @@ diff --git a/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/invite_
        - equal:
            path: spec.template.spec.nodeSelector
            value:
+diff --git a/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/keyed_values_test.yaml b/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/keyed_values_test.yaml
+--- a/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/keyed_values_test.yaml
++++ b/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/keyed_values_test.yaml
+@@ -48,6 +48,7 @@
+     template: templates/certs/ca-bootstrap-job.yaml
+     set:
+       host: enroll.grid.example.com
++      networkPolicy.from: [{ipBlock: {cidr: 192.0.2.0/24}}]
+     asserts:
+       - contains:
+           path: spec.template.spec.containers[0].args
 diff --git a/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/review_security_test.yaml b/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/review_security_test.yaml
 new file mode 100644
 --- /dev/null
 +++ b/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/review_security_test.yaml
-@@ -0,0 +1,94 @@
+@@ -0,0 +1,154 @@
 +suite: downstream security defaults
 +templates:
 +  - templates/db/db-builtin.yaml
@@ -327,6 +342,77 @@ new file mode 100644
 +          path: spec.validationActions
 +          value: [Deny]
 +        documentIndex: 1
++  - it: rejects system:anonymous in gridAdmins
++    template: templates/enrollment/grid-admin-rbac.yaml
++    set:
++      enrollment.authz: kube
++      enrollment.gridAdmins.subjects: [{kind: User, name: "system:anonymous"}]
++    asserts:
++      - failedTemplate: {errorPattern: cluster-wide group}
++  - it: rejects system:bootstrappers:example in gridAdmins
++    template: templates/enrollment/grid-admin-rbac.yaml
++    set:
++      enrollment.authz: kube
++      enrollment.gridAdmins.subjects: [{kind: Group, name: "system:bootstrappers:example"}]
++    asserts:
++      - failedTemplate: {errorPattern: cluster-wide group}
++  - it: rejects system:anonymous in enrollmentAdmins
++    template: templates/enrollment/grid-admin-rbac.yaml
++    set:
++      enrollment.authz: kube
++      enrollment.enrollmentAdmins.subjects: [{kind: User, name: "system:anonymous"}]
++    asserts:
++      - failedTemplate: {errorPattern: cluster-wide group}
++  - it: rejects system:bootstrappers:example in enrollmentAdmins
++    template: templates/enrollment/grid-admin-rbac.yaml
++    set:
++      enrollment.authz: kube
++      enrollment.enrollmentAdmins.subjects: [{kind: Group, name: "system:bootstrappers:example"}]
++    asserts:
++      - failedTemplate: {errorPattern: cluster-wide group}
++  - it: requires explicit ingress clients for LoadBalancer
++    template: templates/networkpolicy.yaml
++    set:
++      route.enabled: false
++      enrollment.service.type: LoadBalancer
++    asserts:
++      - failedTemplate: {errorPattern: networkPolicy.from requires explicit enrollment clients}
++  - it: requires explicit ingress clients for NodePort
++    template: templates/networkpolicy.yaml
++    set:
++      route.enabled: false
++      enrollment.service.type: NodePort
++    asserts:
++      - failedTemplate: {errorPattern: networkPolicy.from requires explicit enrollment clients}
++  - it: requires explicit ingress clients for inferred LoadBalancer
++    template: templates/networkpolicy.yaml
++    set:
++      route.enabled: false
++      host: enrollment.example.com
++    asserts:
++      - failedTemplate: {errorPattern: networkPolicy.from requires explicit enrollment clients}
++  - it: permits an external service with explicit client CIDRs
++    template: templates/networkpolicy.yaml
++    documentIndex: 0
++    set:
++      host: enrollment.example.com
++      route.enabled: false
++      networkPolicy.from: [{ipBlock: {cidr: 192.0.2.0/24}}]
++    asserts:
++      - contains:
++          path: spec.ingress[0].from
++          content: {ipBlock: {cidr: 192.0.2.0/24}}
+diff --git a/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/service_test.yaml b/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/service_test.yaml
+--- a/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/service_test.yaml
++++ b/charts/rhai-on-openshift-chart/charts/grid-enrollment/tests/service_test.yaml
+@@ -6,6 +6,7 @@
+     documentIndex: 0
+     set:
+       enrollment.service.type: LoadBalancer
++      networkPolicy.from: [{ipBlock: {cidr: 192.0.2.0/24}}]
+       enrollment.service.loadBalancerIP: 192.0.2.10
+     asserts:
+       - equal:
 diff --git a/charts/rhai-on-openshift-chart/charts/grid-enrollment/values.schema.json b/charts/rhai-on-openshift-chart/charts/grid-enrollment/values.schema.json
 --- a/charts/rhai-on-openshift-chart/charts/grid-enrollment/values.schema.json
 +++ b/charts/rhai-on-openshift-chart/charts/grid-enrollment/values.schema.json
@@ -574,7 +660,7 @@ diff --git a/charts/rhai-on-openshift-chart/charts/praxis-gateway/templates/_hel
  otherwise config.inline serves.
  */}}
  {{- define "praxis-gateway.normalize" -}}
-+{{- if and (hasPrefix "http://" .Values.gatewayConfig.telemetry.otlpEndpoint) (not .Values.gatewayConfig.telemetry.allowInsecure) -}}
++{{- if and (hasPrefix "http://" (lower .Values.gatewayConfig.telemetry.otlpEndpoint)) (not .Values.gatewayConfig.telemetry.allowInsecure) -}}
 +{{- fail "HTTP telemetry requires gatewayConfig.telemetry.allowInsecure=true; use HTTPS for remote collectors and credentials" -}}
 +{{- end -}}
  {{- $v := .Values }}

@@ -92,3 +92,63 @@ tests:
           path: spec.validationActions
           value: [Deny]
         documentIndex: 1
+  - it: rejects system:anonymous in gridAdmins
+    template: templates/enrollment/grid-admin-rbac.yaml
+    set:
+      enrollment.authz: kube
+      enrollment.gridAdmins.subjects: [{kind: User, name: "system:anonymous"}]
+    asserts:
+      - failedTemplate: {errorPattern: cluster-wide group}
+  - it: rejects system:bootstrappers:example in gridAdmins
+    template: templates/enrollment/grid-admin-rbac.yaml
+    set:
+      enrollment.authz: kube
+      enrollment.gridAdmins.subjects: [{kind: Group, name: "system:bootstrappers:example"}]
+    asserts:
+      - failedTemplate: {errorPattern: cluster-wide group}
+  - it: rejects system:anonymous in enrollmentAdmins
+    template: templates/enrollment/grid-admin-rbac.yaml
+    set:
+      enrollment.authz: kube
+      enrollment.enrollmentAdmins.subjects: [{kind: User, name: "system:anonymous"}]
+    asserts:
+      - failedTemplate: {errorPattern: cluster-wide group}
+  - it: rejects system:bootstrappers:example in enrollmentAdmins
+    template: templates/enrollment/grid-admin-rbac.yaml
+    set:
+      enrollment.authz: kube
+      enrollment.enrollmentAdmins.subjects: [{kind: Group, name: "system:bootstrappers:example"}]
+    asserts:
+      - failedTemplate: {errorPattern: cluster-wide group}
+  - it: requires explicit ingress clients for LoadBalancer
+    template: templates/networkpolicy.yaml
+    set:
+      route.enabled: false
+      enrollment.service.type: LoadBalancer
+    asserts:
+      - failedTemplate: {errorPattern: networkPolicy.from requires explicit enrollment clients}
+  - it: requires explicit ingress clients for NodePort
+    template: templates/networkpolicy.yaml
+    set:
+      route.enabled: false
+      enrollment.service.type: NodePort
+    asserts:
+      - failedTemplate: {errorPattern: networkPolicy.from requires explicit enrollment clients}
+  - it: requires explicit ingress clients for inferred LoadBalancer
+    template: templates/networkpolicy.yaml
+    set:
+      route.enabled: false
+      host: enrollment.example.com
+    asserts:
+      - failedTemplate: {errorPattern: networkPolicy.from requires explicit enrollment clients}
+  - it: permits an external service with explicit client CIDRs
+    template: templates/networkpolicy.yaml
+    documentIndex: 0
+    set:
+      host: enrollment.example.com
+      route.enabled: false
+      networkPolicy.from: [{ipBlock: {cidr: 192.0.2.0/24}}]
+    asserts:
+      - contains:
+          path: spec.ingress[0].from
+          content: {ipBlock: {cidr: 192.0.2.0/24}}

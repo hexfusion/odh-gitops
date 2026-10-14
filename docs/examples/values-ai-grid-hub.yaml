@@ -9,6 +9,8 @@ praxis-gateway:
 grid-enrollment:
   # Replace with the externally reachable enrollment Route hostname.
   host: enrollment.apps.example.com
+  route:
+    enabled: true
   enrollment:
     authz: kube
     serviceAccount:

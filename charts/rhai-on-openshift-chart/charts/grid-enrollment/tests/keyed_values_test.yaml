@@ -48,6 +48,7 @@ tests:
     template: templates/certs/ca-bootstrap-job.yaml
     set:
       host: enroll.grid.example.com
+      networkPolicy.from: [{ipBlock: {cidr: 192.0.2.0/24}}]
     asserts:
       - contains:
           path: spec.template.spec.containers[0].args

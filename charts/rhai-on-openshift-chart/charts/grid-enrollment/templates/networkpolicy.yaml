@@ -1,5 +1,9 @@
 {{- define "grid-enrollment.rhoai.networkpolicy.yaml" -}}
 {{- include "grid-enrollment.normalize" . }}
+{{- $v := .Values }}
+{{- if and $v.networkPolicy.enabled (has $v.enrollment.service.type (list "LoadBalancer" "NodePort")) (not (include "grid-enrollment.routeEnabled" .)) (not $v.networkPolicy.from) }}
+{{- fail "networkPolicy.from requires explicit enrollment clients for LoadBalancer or NodePort without a Route" }}
+{{- end }}
 {{- if .Values.networkPolicy.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
