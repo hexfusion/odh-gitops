@@ -24,6 +24,10 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 echo "Fetching $GRID_REPO at $REF"
 git clone --quiet --filter=blob:none --no-checkout "$GRID_REPO" "$TMP_DIR/grid"
 SHA=$(git -C "$TMP_DIR/grid" rev-parse --verify "$REF^{commit}")
+if [[ "$REF" =~ ^[0-9a-fA-F]{40}$ ]] && [[ "${REF,,}" != "$SHA" ]]; then
+  echo "Resolved commit does not match requested SHA" >&2
+  exit 1
+fi
 echo "Resolved $REF to $SHA"
 
 for chart in "${CHARTS[@]}"; do
@@ -37,6 +41,7 @@ for chart in "${CHARTS[@]}"; do
 done
 
 git -C "$ROOT" apply "$ROOT/scripts/ai-grid-related-images.patch"
+git -C "$ROOT" apply "$ROOT/scripts/ai-grid-review-fixes.patch"
 python3 "$ROOT/scripts/adapt-ai-grid-charts.py"
 helm dependency update --skip-refresh "$PARENT"
 

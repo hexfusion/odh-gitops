@@ -171,6 +171,8 @@ gatewayConfig:
     enabled: false
     # -- OTLP/gRPC endpoint. Empty uses OTEL_EXPORTER_OTLP_ENDPOINT from env.
     otlpEndpoint: ""
+    # -- Permit HTTP only for a trusted local collector. Never send credentials over plaintext.
+    allowInsecure: false
     # -- Root sampling probability in the inclusive range 0.0..1.0.
     samplingRate: null
     # -- OpenTelemetry service.name resource attribute.
@@ -339,11 +341,17 @@ port:
 # a LoadBalancer with externalTrafficPolicy Cluster can SNAT clients to node IPs.
 networkPolicy:
   # -- Render the NetworkPolicy.
-  enabled: false
+  enabled: true
   # -- NetworkPolicyPeer entries allowed to reach the listener. Required when enabled.
   # {podSelector: {}} admits every pod in this namespace. An empty namespaceSelector and an
   # ipBlock of 0.0.0.0/0 or ::/0 admit everyone and fail the render.
-  from: []
+  from:
+    - podSelector:
+        matchLabels:
+          grid.opendatahub.io/gateway-client: "true"
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: ingress
   # - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: ingress}}
   #   podSelector: {matchLabels: {app: authenticating-front}}
 
@@ -394,6 +402,8 @@ service:
 
 # -- OpenShift Route to the Service, for a stable HTTPS name. The gateway terminates TLS.
 route:
+  # -- Attest that an inline/external config serves TLS on the Service port with a cert for route.host.
+  externalTls: false
   # -- Render the Route. Needs the route.openshift.io/v1 API.
   enabled: false
   # -- External hostname, a name on the gateway certificate. Required when enabled.
@@ -532,7 +542,13 @@ shutdownDelaySeconds: 5
 terminationGracePeriodSeconds: null
 
 # -- Container resource requests and limits.
-resources: {}
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 2
+    memory: 1Gi
 # -- Node selector for pod scheduling.
 nodeSelector: {}
 # -- Pod affinity rules.

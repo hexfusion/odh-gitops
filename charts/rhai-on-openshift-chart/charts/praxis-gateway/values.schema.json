@@ -3,7 +3,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "config"
+    "config",
+    "resources"
   ],
   "properties": {
     "enabled": {
@@ -718,6 +719,9 @@
               "minimum": 1,
               "maximum": 65536,
               "description": "Positive maximum spans per export batch."
+            },
+            "allowInsecure": {
+              "type": "boolean"
             }
           }
         }
@@ -971,7 +975,7 @@
       "properties": {
         "level": {
           "type": "string",
-          "pattern": "^((?i)(off|error|warn|info|debug|trace))?$",
+          "pattern": "^([oO][fF][fF]|[eE][rR][rR][oO][rR]|[wW][aA][rR][nN]|[iI][nN][fF][oO]|[dD][eE][bB][uU][gG]|[tT][rR][aA][cC][eE])?$",
           "description": "Level for every module: off, error, warn, info, debug, or trace, in any case. Empty leaves RUST_LOG unset, so the binary uses its own default (info)."
         },
         "filter": {
@@ -1078,8 +1082,7 @@
         "protocol": {
           "type": "string",
           "enum": [
-            "TCP",
-            "UDP"
+            "TCP"
           ],
           "description": "Port protocol."
         }
@@ -1158,6 +1161,9 @@
               "description": "PEM CA that signed the gateway certificate, for reencrypt."
             }
           }
+        },
+        "externalTls": {
+          "type": "boolean"
         }
       }
     },
@@ -1347,24 +1353,57 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "enabled": { "type": "boolean", "description": "Annotate and delegate generated Secret mounts to the Grid operator." },
-        "network": { "type": "string", "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$", "description": "GridNetwork name that opted into mount reconciliation." },
-        "gatewayRef": { "type": "string", "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$", "description": "GridNetwork gatewayRefs name. Defaults to the Deployment name." },
-        "releaseHelmMounts": { "type": "boolean", "description": "Release selected Helm-managed credentials and non-serving TLS mounts after the operator-owned configuration is ready." },
-        "managedCredentialNames": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 }, "description": "Credential Secret names whose mounts are owned by Grid; other credentials remain Helm-managed." },
+        "enabled": {
+          "type": "boolean",
+          "description": "Annotate and delegate generated Secret mounts to the Grid operator."
+        },
+        "network": {
+          "type": "string",
+          "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$",
+          "description": "GridNetwork name that opted into mount reconciliation."
+        },
+        "gatewayRef": {
+          "type": "string",
+          "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$",
+          "description": "GridNetwork gatewayRefs name. Defaults to the Deployment name."
+        },
+        "releaseHelmMounts": {
+          "type": "boolean",
+          "description": "Release selected Helm-managed credentials and non-serving TLS mounts after the operator-owned configuration is ready."
+        },
+        "managedCredentialNames": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Credential Secret names whose mounts are owned by Grid; other credentials remain Helm-managed."
+        },
         "rbac": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "create": { "type": "boolean", "description": "Create a Role and RoleBinding in the release namespace that let the operator ServiceAccount get and patch this chart's Deployment and no other." }
+            "create": {
+              "type": "boolean",
+              "description": "Create a Role and RoleBinding in the release namespace that let the operator ServiceAccount get and patch this chart's Deployment and no other."
+            }
           }
         },
         "operator": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "serviceAccount": { "type": "string", "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$", "description": "Operator ServiceAccount the Role binds. Empty fails the render while rbac.create is true." },
-            "namespace": { "type": "string", "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$", "description": "Namespace of the operator ServiceAccount. Empty fails the render while rbac.create is true." }
+            "serviceAccount": {
+              "type": "string",
+              "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$",
+              "description": "Operator ServiceAccount the Role binds. Empty fails the render while rbac.create is true."
+            },
+            "namespace": {
+              "type": "string",
+              "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$",
+              "description": "Namespace of the operator ServiceAccount. Empty fails the render while rbac.create is true."
+            }
           }
         }
       }
@@ -1455,8 +1494,7 @@
       "description": "Seconds Kubernetes gives a terminating pod before killing it. Null: 30 plus shutdownDelaySeconds."
     },
     "resources": {
-      "type": "object",
-      "description": "Container resource requests and limits."
+      "$ref": "#/definitions/resourceBudget"
     },
     "nodeSelector": {
       "type": "object",
@@ -1486,6 +1524,59 @@
     "priorityClassName": {
       "type": "string",
       "description": "Priority class for the gateway pod."
+    }
+  },
+  "definitions": {
+    "resourceBudget": {
+      "type": "object",
+      "required": [
+        "requests",
+        "limits"
+      ],
+      "properties": {
+        "requests": {
+          "type": "object",
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "properties": {
+            "cpu": {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "memory": {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "properties": {
+            "cpu": {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "memory": {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          }
+        }
+      }
     }
   }
 }

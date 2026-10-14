@@ -6,6 +6,9 @@ the values configure grid routing (backends, the provider role, or gridServing);
 otherwise config.inline serves.
 */}}
 {{- define "praxis-gateway.normalize" -}}
+{{- if and (hasPrefix "http://" .Values.gatewayConfig.telemetry.otlpEndpoint) (not .Values.gatewayConfig.telemetry.allowInsecure) -}}
+{{- fail "HTTP telemetry requires gatewayConfig.telemetry.allowInsecure=true; use HTTPS for remote collectors and credentials" -}}
+{{- end -}}
 {{- $v := .Values }}
 {{- $cfg := $v.gatewayConfig }}
 {{- $provider := eq ($cfg.role | default "consumer") "provider" }}

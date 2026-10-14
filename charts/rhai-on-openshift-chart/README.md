@@ -235,7 +235,7 @@ ConfigMaps, Secrets or databases, or resources retained by upstream Helm hooks/r
 The gateway/enrollment charts are version `0.2.0`, vendored from `praxis-proxy/grid@3359afdcddda926f3cdf986f5173f12b30b40aae`.
 The parent defaults to the Grid gateway image, rather than the generic Praxis AI image.
 Refresh with `make update-ai-grid-charts GRID_REF=<tag-or-sha>`; this reapplies the downstream
-image helper patch and runtime template adapter, updates the dependency lock, and regenerates
+image/review patches and runtime template adapter, updates the dependency lock, and regenerates
 docs and snapshots. The adapter exports named resource templates so the parent can gate rendering
 using its resolved DSC state. Standalone subchart installs still render directly. This avoids
 relying on Helm dependency conditions to evaluate profile templates.
@@ -258,6 +258,36 @@ global:
     - name: RELATED_IMAGE_ODH_PRAXIS_AI_GRID_GATEWAY_IMAGE
       value: registry.example.com/rhai/grid-gateway@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ```
+
+The parent pins gateway, enrollment, PostgreSQL and Helm test images by digest. When
+changing an image repository/tag, also replace its digest (or use `global.relatedImages`).
+Downstream payloads should provide digest-qualified related images, including enrollment,
+whose image also runs the CA bootstrap Job. Subchart standalone image settings retain the
+upstream defaults; the parent supplies the release pins.
+
+Gateway, enrollment, bootstrap, invite and database containers have CPU/memory budgets.
+These are starting limits; size them for your workload. PostgreSQL uses a read-only root
+with writable home, temporary and socket directories plus its data PVC.
+
+Ingress policies are enabled by default. Gateway clients in the release namespace must
+have `grid.opendatahub.io/gateway-client: "true"`; the default also admits OpenShift router
+namespaces labelled `network.openshift.io/policy-group: ingress`. Replace
+`praxis-gateway.networkPolicy.from` with the actual inference clients for your topology.
+Enrollment admits its invite Job, and router namespaces when its Route is enabled;
+add direct clients under `grid-enrollment.networkPolicy.from`. Built-in PostgreSQL admits
+only this release's enrollment pods. A NetworkPolicy-capable CNI is required; node probes
+are not blocked. Direct LoadBalancer deployments must configure their permitted sources.
+
+Invite Jobs require Kubernetes ValidatingAdmissionPolicy support (GA in Kubernetes 1.30).
+Their admission policy limits writes to configured Opaque invite Secrets and rejects
+ServiceAccount-token annotations, independently of optional ACM delivery policies.
+
+For an inline or external gateway config, a Route requires `route.externalTls: true` to
+attest that its listener actually serves TLS. Generated configs retain their TLS validation.
+Explicit HTTP telemetry endpoints require `gatewayConfig.telemetry.allowInsecure: true`;
+use this only for a trusted local collector, without credentials. Environment-supplied
+exporter settings must follow the same transport policy. The Helm test checks TCP
+connectivity only; validate application responses and TLS identities with site-specific tests.
 
 The Grid operator image belongs to the platform payload. Override it through
 `operator.<odh|rhoai>.olm.config.env` with `RELATED_IMAGE_ODH_PRAXIS_AI_GRID_OPERATOR_IMAGE`

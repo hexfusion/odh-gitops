@@ -8,6 +8,9 @@
 {{- if not .Values.route.host }}
 {{- fail "route.host is required when route.enabled is true: it must be a name on the gateway certificate" }}
 {{- end }}
+{{- if and (not .Values.gatewayConfig.render) (not .Values.route.externalTls) }}
+{{- fail "route needs TLS at the gateway: inline/external config requires route.externalTls=true and a TLS listener on the Service port" }}
+{{- end }}
 {{- if .Values.gatewayConfig.render }}
 {{- $provider := eq (.Values.gatewayConfig.role | default "consumer") "provider" }}
 {{- if not (or $provider .Values.gatewayConfig.listenerTls.enabled) }}

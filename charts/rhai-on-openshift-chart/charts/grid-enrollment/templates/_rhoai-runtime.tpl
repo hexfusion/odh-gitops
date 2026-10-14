@@ -40,6 +40,11 @@
 ---
 {{ $resource }}
 {{ end }}
+{{- $resource := include "grid-enrollment.rhoai.enrollment/invite-admission.yaml" . | trim -}}
+{{- if $resource }}
+---
+{{ $resource }}
+{{ end }}
 {{- $resource := include "grid-enrollment.rhoai.enrollment/invite-job.yaml" . | trim -}}
 {{- if $resource }}
 ---
@@ -56,6 +61,11 @@
 {{ $resource }}
 {{ end }}
 {{- $resource := include "grid-enrollment.rhoai.enrollment/service.yaml" . | trim -}}
+{{- if $resource }}
+---
+{{ $resource }}
+{{ end }}
+{{- $resource := include "grid-enrollment.rhoai.networkpolicy.yaml" . | trim -}}
 {{- if $resource }}
 ---
 {{ $resource }}

@@ -205,6 +205,38 @@ charts:
           - profile=ai-grid
           - grid-enrollment.enabled=false
 
+      - name: ai-grid-invites
+        setFlags:
+          - skipCrdCheck=true
+          - profile=ai-grid
+          - grid-enrollment.enrollment.authz=kube
+          - grid-enrollment.invites.site-a.network=grid
+
+      - name: ai-grid-reject-udp
+        expectFail: true
+        expectMessage: "protocol"
+        setFlags:
+          - skipCrdCheck=true
+          - profile=ai-grid
+          - praxis-gateway.port.protocol=UDP
+
+      - name: ai-grid-reject-plaintext-route
+        expectFail: true
+        expectMessage: "inline/external config requires route.externalTls"
+        setFlags:
+          - skipCrdCheck=true
+          - profile=ai-grid
+          - praxis-gateway.route.enabled=true
+          - praxis-gateway.route.host=gateway.apps.example.com
+
+      - name: ai-grid-reject-http-telemetry
+        expectFail: true
+        expectMessage: "HTTP telemetry requires"
+        setFlags:
+          - skipCrdCheck=true
+          - profile=ai-grid
+          - praxis-gateway.gatewayConfig.telemetry.otlpEndpoint=http://collector:4317
+
       - name: ai-grid-related-images
         valuesFiles:
           - charts/rhai-on-openshift-chart/test/values-ai-grid-images.yaml

@@ -242,7 +242,7 @@ GRID_REPO ?= https://github.com/praxis-proxy/grid.git
 GRID_REF ?= 3359afdcddda926f3cdf986f5173f12b30b40aae
 .PHONY: update-ai-grid-charts
 update-ai-grid-charts: yq ## Vendor AI Grid charts from praxis-proxy/grid. Use GRID_REF=<tag|sha>, optional GRID_REPO=<url|path>
-	@YQ=$(YQ) GRID_REPO=$(GRID_REPO) ./scripts/update-ai-grid-charts.sh $(GRID_REF)
+	@YQ='$(subst ','"'"',$(YQ))' GRID_REPO='$(subst ','"'"',$(GRID_REPO))' ./scripts/update-ai-grid-charts.sh '$(subst ','"'"',$(GRID_REF))'
 
 .PHONY: chart-test
 chart-test: yq ## Test chart(s) against snapshots. Use CHART_NAME=<name> for specific chart, omit for all

@@ -6,6 +6,7 @@ are emitted only by the parent's management-state gate. No shared Values mutatio
 or template execution ordering is needed.
 """
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 for name in ("grid-enrollment", "praxis-gateway"):
@@ -18,6 +19,16 @@ for name in ("grid-enrollment", "praxis-gateway"):
         exported = f"{name}.rhoai.{relative}"
         marker = '{{- define "' + exported + '" -}}'
         source = path.read_text()
+        suffix = ('{{- end }}\n{{- if .Chart.IsRoot }}\n{{ include "' + exported
+                  + '" . }}\n{{- end }}\n')
+        if source.startswith(marker):
+            if not source.endswith(suffix):
+                raise ValueError(f"Malformed existing runtime wrapper: {path}")
+            body = source[len(marker): -len(suffix)]
+        else:
+            body = source
+        if re.search(r"{{-?\s*define\s", body):
+            raise ValueError(f"Unexpected nested named template in resource: {path}")
         if not source.startswith(marker):
             path.write_text(marker + "\n" + source.rstrip() + "\n{{- end }}\n"
                             '{{- if .Chart.IsRoot }}\n{{ include "' + exported

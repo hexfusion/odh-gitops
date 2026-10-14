@@ -201,8 +201,8 @@ tests:
       value: Job
     set:
       enrollment.resources:
-        limits:
-          memory: 64Mi
+        requests: {cpu: 50m, memory: 32Mi}
+        limits: {cpu: 200m, memory: 64Mi}
       enrollment.nodeSelector:
         zone: a
       enrollment.tolerations:
@@ -212,8 +212,8 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources
           value:
-            limits:
-              memory: 64Mi
+            requests: {cpu: 50m, memory: 32Mi}
+            limits: {cpu: 200m, memory: 64Mi}
       - equal:
           path: spec.template.spec.nodeSelector
           value:

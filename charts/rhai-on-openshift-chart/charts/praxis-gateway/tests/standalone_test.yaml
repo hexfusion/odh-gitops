@@ -164,7 +164,7 @@ tests:
           count: 0
         template: templates/gateway-config.yaml
       - hasDocuments:
-          count: 0
+          count: 1
         template: templates/networkpolicy.yaml
       - hasDocuments:
           count: 0

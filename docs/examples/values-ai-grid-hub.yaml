@@ -16,5 +16,5 @@ grid-enrollment:
   db:
     type: external
     external:
-      # Must contain connection-url for a database provisioned for enrollment.
+      # Must contain DB_CONNECTION_URL for a database provisioned for enrollment.
       connectionUrlSecretRef: grid-enrollment-db

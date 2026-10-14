@@ -128,10 +128,13 @@
               "minimum": 0
             },
             "resources": {
-              "type": "object"
+              "$ref": "#/definitions/resourceBudget"
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "required": [
+            "resources"
+          ]
         }
       },
       "required": [
@@ -339,7 +342,7 @@
           "additionalProperties": false
         },
         "resources": {
-          "type": "object"
+          "$ref": "#/definitions/resourceBudget"
         },
         "podSecurityContext": {
           "type": "object"
@@ -379,7 +382,10 @@
           }
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "required": [
+        "resources"
+      ]
     },
     "db": {
       "type": "object",
@@ -415,7 +421,7 @@
               }
             },
             "resources": {
-              "type": "object"
+              "$ref": "#/definitions/resourceBudget"
             },
             "auth": {
               "type": "object",
@@ -442,7 +448,10 @@
               "additionalProperties": false
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "required": [
+            "resources"
+          ]
         },
         "external": {
           "type": "object",
@@ -625,7 +634,7 @@
       "properties": {
         "level": {
           "type": "string",
-          "pattern": "^(?i)(off|error|warn|info|debug|trace)$",
+          "pattern": "^([oO][fF][fF]|[eE][rR][rR][oO][rR]|[wW][aA][rR][nN]|[iI][nN][fF][oO]|[dD][eE][bB][uU][gG]|[tT][rR][aA][cC][eE])$",
           "description": "Level for every module: off, error, warn, info, debug, or trace, in any case."
         },
         "filter": {
@@ -650,6 +659,27 @@
           "minLength": 1
         }
       }
+    },
+    "initResources": {
+      "$ref": "#/definitions/resourceBudget"
+    },
+    "networkPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "from": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "routerNamespaceSelector": {
+          "type": "object"
+        }
+      }
     }
   },
   "required": [
@@ -657,7 +687,61 @@
     "ca",
     "serving",
     "enrollment",
-    "db"
+    "db",
+    "initResources"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "definitions": {
+    "resourceBudget": {
+      "type": "object",
+      "required": [
+        "requests",
+        "limits"
+      ],
+      "properties": {
+        "requests": {
+          "type": "object",
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "properties": {
+            "cpu": {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "memory": {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "properties": {
+            "cpu": {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "memory": {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
 }
