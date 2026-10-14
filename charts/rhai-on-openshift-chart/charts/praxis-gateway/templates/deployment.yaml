@@ -1,3 +1,4 @@
+{{- define "praxis-gateway.rhoai.deployment.yaml" -}}
 {{- include "praxis-gateway.normalize" . }}
 {{- include "praxis-gateway.validateDigest" . }}
 {{- include "praxis-gateway.validateConfig" . }}
@@ -476,3 +477,7 @@ spec:
       {{- with .Values.priorityClassName }}
       priorityClassName: {{ . | quote }}
       {{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "praxis-gateway.rhoai.deployment.yaml" . }}
+{{- end }}

@@ -152,8 +152,8 @@ A Helm chart for installing ODH/RHOAI dependencies and component configurations
 | dependencies.tempo.enabled | string | `"auto"` | Enable tempo: auto (if needed), true (always), false (never) |
 | global | object | `{"relatedImages":[]}` | Values shared by the optional AI Grid subcharts. |
 | global.relatedImages | list | `[]` | Full image references using the XKS name/value convention. See README.md for supported names. |
-| grid-enrollment | object | `{"enabled":false,"fullnameOverride":"grid-enrollment"}` | AI Grid enrollment service |
-| grid-enrollment.enabled | bool | `false` | Install the AI Grid enrollment service |
+| grid-enrollment | object | `{"enabled":true,"fullnameOverride":"grid-enrollment"}` | AI Grid enrollment service |
+| grid-enrollment.enabled | bool | `true` | Include enrollment when AIGateway and aiGrid are Managed. False uses an externally managed service. |
 | grid-enrollment.fullnameOverride | string | `"grid-enrollment"` | Stable resource names, independent of the release name |
 | labels | object | `{}` | Common labels applied to all resources |
 | olm.installPlanApproval | string | `"Automatic"` | Install plan approval mode (Automatic or Manual) |
@@ -163,8 +163,8 @@ A Helm chart for installing ODH/RHOAI dependencies and component configurations
 | operator.odh | object | `{"applicationsNamespace":"opendatahub","monitoringNamespace":"opendatahub","olm":{"channel":"fast-3","name":"opendatahub-operator","namespace":"opendatahub-operator-system","source":"community-operators"}}` | ODH operator settings |
 | operator.rhoai | object | `{"applicationsNamespace":"redhat-ods-applications","monitoringNamespace":"redhat-ods-monitoring","olm":{"channel":"beta","name":"rhods-operator","namespace":"redhat-ods-operator","source":"redhat-operators"}}` | RHOAI operator settings |
 | operator.type | string | `"odh"` | Operator type: odh (Open Data Hub) or rhoai (Red Hat OpenShift AI) |
-| praxis-gateway | object | `{"enabled":false,"fullnameOverride":"grid-gateway","image":{"flavor":"grid-gateway","repository":"ghcr.io/praxis-proxy/grid-gateway","tag":"v0.2.0"}}` | AI Grid gateway (Praxis) |
-| praxis-gateway.enabled | bool | `false` | Install the AI Grid gateway |
+| praxis-gateway | object | `{"enabled":true,"fullnameOverride":"grid-gateway","image":{"flavor":"grid-gateway","repository":"ghcr.io/praxis-proxy/grid-gateway","tag":"v0.2.0"}}` | AI Grid gateway (Praxis) |
+| praxis-gateway.enabled | bool | `true` | Include the gateway when AIGateway and aiGrid are Managed. False uses an externally managed gateway. |
 | praxis-gateway.fullnameOverride | string | `"grid-gateway"` | Stable resource names, independent of the release name |
 | praxis-gateway.image.repository | string | `"ghcr.io/praxis-proxy/grid-gateway"` | Use the Grid gateway build, which includes Grid routing filters. |
 | profile | string | `"default"` | Deploy profile: sets default managementState for components and services. Options: default (all Removed), rhaii (inference), maas, ai-grid (Grid operator and CRDs) Explicit managementState values override the profile. |

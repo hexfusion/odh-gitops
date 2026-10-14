@@ -1,3 +1,4 @@
+{{- define "praxis-gateway.rhoai.tests/gateway-ready.yaml" -}}
 {{- if .Values.service.enabled }}
 apiVersion: v1
 kind: Pod
@@ -36,4 +37,8 @@ spec:
             http://{{ include "praxis-gateway.fullname" . }}:{{ .Values.service.port }}/ \
             2>&1 || true
           nc -z -w5 {{ include "praxis-gateway.fullname" . }} {{ .Values.service.port }}
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "praxis-gateway.rhoai.tests/gateway-ready.yaml" . }}
 {{- end }}

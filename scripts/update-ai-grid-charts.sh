@@ -37,6 +37,7 @@ for chart in "${CHARTS[@]}"; do
 done
 
 git -C "$ROOT" apply "$ROOT/scripts/ai-grid-related-images.patch"
+python3 "$ROOT/scripts/adapt-ai-grid-charts.py"
 helm dependency update --skip-refresh "$PARENT"
 
 make -C "$ROOT" helm-docs >/dev/null

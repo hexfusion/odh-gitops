@@ -1,3 +1,4 @@
+{{- define "praxis-gateway.rhoai.service-metrics.yaml" -}}
 {{- include "praxis-gateway.normalize" . }}
 {{- if .Values.metricsListener.enabled }}
 {{- /* ClusterIP of its own, so a LoadBalancer gateway Service never exposes metrics. */}}
@@ -21,4 +22,8 @@ spec:
       protocol: TCP
   selector:
     {{- include "praxis-gateway.selectorLabels" . | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "praxis-gateway.rhoai.service-metrics.yaml" . }}
 {{- end }}

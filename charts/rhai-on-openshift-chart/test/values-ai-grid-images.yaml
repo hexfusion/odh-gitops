@@ -1,6 +1,5 @@
 profile: ai-grid
 praxis-gateway:
-  enabled: true
   overlay:
     enabled: true
     existingConfigMap: grid-routing
@@ -11,7 +10,6 @@ praxis-gateway:
   config:
     existingConfigMap: grid-gateway-config
 grid-enrollment:
-  enabled: true
   route:
     enabled: false
   enrollment:

@@ -1,3 +1,4 @@
+{{- define "grid-enrollment.rhoai.enrollment/deployment.yaml" -}}
 {{- include "grid-enrollment.normalize" . }}
 {{- include "grid-enrollment.validateAuthz" . }}
 apiVersion: apps/v1
@@ -195,3 +196,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "grid-enrollment.rhoai.enrollment/deployment.yaml" . }}
+{{- end }}

@@ -23,21 +23,21 @@
     },
     "grid-enrollment": {
       "type": "object",
-      "description": "Optional grid-enrollment subchart. See charts/grid-enrollment for its values.",
+      "description": "AI Grid runtime, rendered only when AIGateway and aiGrid are Managed. See charts/grid-enrollment for its values.",
       "properties": {
         "enabled": {
           "type": "boolean",
-          "default": false
+          "default": true
         }
       }
     },
     "praxis-gateway": {
       "type": "object",
-      "description": "Optional praxis-gateway subchart. See charts/praxis-gateway for its values.",
+      "description": "AI Grid runtime, rendered only when AIGateway and aiGrid are Managed. See charts/praxis-gateway for its values.",
       "properties": {
         "enabled": {
           "type": "boolean",
-          "default": false
+          "default": true
         }
       }
     },

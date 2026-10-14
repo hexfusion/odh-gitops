@@ -1,3 +1,4 @@
+{{- define "grid-enrollment.rhoai.enrollment/invite-job.yaml" -}}
 {{- include "grid-enrollment.normalize" . }}
 {{- if .Values.invites }}
 {{- if ne .Values.enrollment.authz "kube" }}
@@ -165,4 +166,8 @@ spec:
                   audience: {{ .Values.enrollment.tokenAudience | quote }}
                   expirationSeconds: 600
                   path: token
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "grid-enrollment.rhoai.enrollment/invite-job.yaml" . }}
 {{- end }}

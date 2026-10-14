@@ -3,12 +3,10 @@
 # Helm owns only the gateway and enrollment workloads below.
 profile: ai-grid
 praxis-gateway:
-  enabled: true
   config:
     # Create this ConfigMap in the Helm release namespace with your site config.
     existingConfigMap: grid-gateway-config
 grid-enrollment:
-  enabled: true
   # Replace with the externally reachable enrollment Route hostname.
   host: enrollment.apps.example.com
   enrollment:

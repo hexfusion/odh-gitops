@@ -1,3 +1,4 @@
+{{- define "praxis-gateway.rhoai.NOTES.txt" -}}
 {{- include "praxis-gateway.normalize" . }}
 {{- $fullname := include "praxis-gateway.fullname" . }}
 {{- $configSource := include "praxis-gateway.configSource" . }}
@@ -73,4 +74,8 @@ NOTE: gatewayConfig.auth.mode is none and
 {{- end }}
 Anything that exposes the pod outside this chart serves unauthenticated inference.
 Limit networkPolicy.from to the authenticating front.
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "praxis-gateway.rhoai.NOTES.txt" . }}
 {{- end }}

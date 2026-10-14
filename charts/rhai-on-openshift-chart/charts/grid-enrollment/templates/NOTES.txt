@@ -1,3 +1,4 @@
+{{- define "grid-enrollment.rhoai.NOTES.txt" -}}
 {{- include "grid-enrollment.normalize" . }}
 {{- $ns := .Release.Namespace -}}
 {{- $route := and (include "grid-enrollment.routeEnabled" .) .Values.route.host -}}
@@ -55,3 +56,7 @@ Serving cert: Secret/{{ .Values.serving.existingSecretRef }} (provided). It must
 Give the site the token and grid-ca.crt out of band. The CA signing key lives in a
 Secret, so enable etcd encryption at rest before production.
 Docs: https://github.com/praxis-proxy/grid/blob/main/docs/installation/enrollment.md
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "grid-enrollment.rhoai.NOTES.txt" . }}
+{{- end }}

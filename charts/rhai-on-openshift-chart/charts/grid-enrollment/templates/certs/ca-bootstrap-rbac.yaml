@@ -1,3 +1,4 @@
+{{- define "grid-enrollment.rhoai.certs/ca-bootstrap-rbac.yaml" -}}
 {{- include "grid-enrollment.normalize" . }}
 {{- if include "grid-enrollment.bootstrapRuns" . }}
 {{- $ca := ne (include "grid-enrollment.caProvided" .) "true" }}
@@ -179,4 +180,8 @@ subjects:
     name: {{ include "grid-enrollment.bootstrapServiceAccountName" $ }}
     namespace: {{ $.Release.Namespace }}
 {{- end }}
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "grid-enrollment.rhoai.certs/ca-bootstrap-rbac.yaml" . }}
 {{- end }}

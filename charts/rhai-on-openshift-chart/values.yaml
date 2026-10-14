@@ -694,20 +694,20 @@ dependencies:
     #       enabled: true
 
 # =============================================================================
-# AI GRID - Optional subcharts vendored from github.com/praxis-proxy/grid.
+# AI GRID - Managed runtime subcharts vendored from github.com/praxis-proxy/grid.
 # Values under each key pass through to the subchart; see charts/<name> in this chart.
 # =============================================================================
 # -- AI Grid enrollment service
 grid-enrollment:
-  # -- Install the AI Grid enrollment service
-  enabled: false
+  # -- Include enrollment when AIGateway and aiGrid are Managed. False uses an externally managed service.
+  enabled: true
   # -- Stable resource names, independent of the release name
   fullnameOverride: grid-enrollment
 
 # -- AI Grid gateway (Praxis)
 praxis-gateway:
-  # -- Install the AI Grid gateway
-  enabled: false
+  # -- Include the gateway when AIGateway and aiGrid are Managed. False uses an externally managed gateway.
+  enabled: true
   # -- Stable resource names, independent of the release name
   fullnameOverride: grid-gateway
   image:

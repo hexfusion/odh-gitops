@@ -1,3 +1,4 @@
+{{- define "grid-enrollment.rhoai.enrollment/grid-admin-rbac.yaml" -}}
 {{- include "grid-enrollment.normalize" . }}
 {{- if eq .Values.enrollment.authz "kube" }}
 {{- $fullname := include "grid-enrollment.fullname" . }}
@@ -111,4 +112,8 @@ roleRef:
   name: {{ $fullname }}-enrollment-admin
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "grid-enrollment.rhoai.enrollment/grid-admin-rbac.yaml" . }}
 {{- end }}

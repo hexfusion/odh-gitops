@@ -1,3 +1,4 @@
+{{- define "grid-enrollment.rhoai.enrollment/service.yaml" -}}
 {{- include "grid-enrollment.normalize" . }}
 apiVersion: v1
 kind: Service
@@ -33,4 +34,8 @@ metadata:
 imagePullSecrets:
   {{- toYaml . | nindent 2 }}
 {{- end }}
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "grid-enrollment.rhoai.enrollment/service.yaml" . }}
 {{- end }}

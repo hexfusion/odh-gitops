@@ -763,3 +763,11 @@ Returns "true" if tags.install-with-helm-dependencies is false (default), empty 
 true
 {{- end -}}
 {{- end }}
+
+{{/* Resolve runtime ownership from exactly the same configuration as the DSC. */}}
+{{- define "rhoai-dependencies.aiGridManaged" -}}
+{{- $dsc := include "rhoai-dependencies.componentDSCConfig" (dict "componentName" "aigateway" "component" .Values.components.aigateway "root" .) | fromYaml -}}
+{{- if and (eq $dsc.managementState "Managed") (eq (dig "aiGrid" "managementState" "Removed" $dsc) "Managed") -}}
+true
+{{- end -}}
+{{- end }}

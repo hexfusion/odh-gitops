@@ -1,3 +1,4 @@
+{{- define "praxis-gateway.rhoai.networkpolicy.yaml" -}}
 {{- include "praxis-gateway.normalize" . }}
 {{- if .Values.networkPolicy.enabled }}
 {{- if not .Values.networkPolicy.from }}
@@ -44,4 +45,8 @@ spec:
         - port: {{ .Values.metricsListener.port }}
           protocol: TCP
     {{- end }}
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "praxis-gateway.rhoai.networkpolicy.yaml" . }}
 {{- end }}

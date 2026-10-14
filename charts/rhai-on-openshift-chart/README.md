@@ -208,9 +208,6 @@ Profiles are defined as YAML files in the [`profiles/`](profiles/) directory. Se
 
 ### AI Grid
 
-
-### AI Grid
-
 AI Grid is opt-in. The default profile leaves it disabled and omits `aiGrid` for compatibility
 with payloads that do not yet expose the field. `--set profile=ai-grid` explicitly sets AIGateway
 and its `aiGrid` sub-component to `Managed`; other sub-components remain `Removed`.
@@ -220,19 +217,28 @@ The AI Gateway operator owns the Grid operator and its CRDs (ai-gateway-operator
 This chart does not install a second Grid operator. The profile requires an operator payload
 containing opendatahub-operator PR #4186; chart version `3.6.0` alone does not guarantee that payload.
 
-Gateway and enrollment are separate, optional workloads with site-specific configuration.
-They remain disabled by default. To enable both with the profile, start from
-[`values-ai-grid-hub.yaml`](../../docs/examples/values-ai-grid-hub.yaml), configure its hostname,
-ConfigMap and database Secret, then install with `-f docs/examples/values-ai-grid-hub.yaml`.
-Use a database provisioned for enrollment; do not point it at the MaaS database without a separate database/schema arrangement.
-Setting the DSC state to `Removed` stops operator-managed Grid resources; disable the two Helm
-`enabled` flags as well when removing gateway/enrollment. Helm subchart conditions are evaluated
-before profile templates, so `--set profile=ai-grid` alone deliberately does not enable them.
+The profile also enables the Helm-managed gateway and enrollment workloads. Both runtime
+`enabled` flags default to `true`, but resources render only when the effective AIGateway
+and `aiGrid` management states are both `Managed`. Thus the default profile installs neither.
+Setting either state to `Removed` suppresses both runtimes on the next Helm upgrade or GitOps
+sync with pruning enabled, even if their `enabled` flags remain `true`. Editing the live DSC
+alone does not update a Helm release.
+Set an individual runtime's `enabled: false` to supply that service externally.
+
+Use [`values-ai-grid-hub.yaml`](../../docs/examples/values-ai-grid-hub.yaml) to configure a
+hub's hostname, gateway ConfigMap and database Secret. The profile defaults render the upstream
+gateway status endpoint and built-in enrollment database; configure routing before using it
+for inference. Use a database provisioned for enrollment; do not point it at the MaaS database
+without a separate database/schema arrangement. Removal does not delete externally supplied
+ConfigMaps, Secrets or databases, or resources retained by upstream Helm hooks/retention policies.
 
 The gateway/enrollment charts are version `0.2.0`, vendored from `praxis-proxy/grid@3359afdcddda926f3cdf986f5173f12b30b40aae`.
 The parent defaults to the Grid gateway image, rather than the generic Praxis AI image.
 Refresh with `make update-ai-grid-charts GRID_REF=<tag-or-sha>`; this reapplies the downstream
-image helper patch, updates the dependency lock, and regenerates docs and snapshots.
+image helper patch and runtime template adapter, updates the dependency lock, and regenerates
+docs and snapshots. The adapter exports named resource templates so the parent can gate rendering
+using its resolved DSC state. Standalone subchart installs still render directly. This avoids
+relying on Helm dependency conditions to evaluate profile templates.
 
 Downstream builds can inject full image references through `global.relatedImages`, using the
 same `name`/`value` convention as the XKS chart. These overrides take precedence over subchart

@@ -1,5 +1,5 @@
 # AI Grid profile - AI Grid multi-cluster routing only
-# Enables AIGateway with only the aiGrid sub-component.
+# Enables AIGateway with only aiGrid and its gateway/enrollment runtimes.
 components:
   aigateway:
     dsc:

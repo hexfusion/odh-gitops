@@ -174,6 +174,37 @@ charts:
           - profile=ai-grid
           - components.aigateway.dsc.aiGrid.managementState=Removed
 
+      - name: ai-grid-parent-removed
+        setFlags:
+          - skipCrdCheck=true
+          - profile=ai-grid
+          - components.aigateway.dsc.managementState=Removed
+
+      - name: ai-grid-manual
+        setFlags:
+          - skipCrdCheck=true
+          - components.aigateway.dsc.managementState=Managed
+          - components.aigateway.dsc.aiGrid.managementState=Managed
+
+      - name: ai-grid-external-runtimes
+        setFlags:
+          - skipCrdCheck=true
+          - profile=ai-grid
+          - grid-enrollment.enabled=false
+          - praxis-gateway.enabled=false
+
+      - name: ai-grid-external-gateway
+        setFlags:
+          - skipCrdCheck=true
+          - profile=ai-grid
+          - praxis-gateway.enabled=false
+
+      - name: ai-grid-external-enrollment
+        setFlags:
+          - skipCrdCheck=true
+          - profile=ai-grid
+          - grid-enrollment.enabled=false
+
       - name: ai-grid-related-images
         valuesFiles:
           - charts/rhai-on-openshift-chart/test/values-ai-grid-images.yaml
@@ -185,9 +216,7 @@ charts:
           - profile=ai-grid
           - grid-enrollment.route.enabled=false
           - skipCrdCheck=true
-          - praxis-gateway.enabled=true
           - praxis-gateway.config.existingConfigMap=grid-gateway-config
-          - grid-enrollment.enabled=true
           - grid-enrollment.enrollment.authz=kube
           - grid-enrollment.enrollment.serviceAccount.create=true
           - grid-enrollment.db.type=external

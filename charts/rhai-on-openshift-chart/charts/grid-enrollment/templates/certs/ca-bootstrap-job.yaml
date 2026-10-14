@@ -1,3 +1,4 @@
+{{- define "grid-enrollment.rhoai.certs/ca-bootstrap-job.yaml" -}}
 {{- include "grid-enrollment.normalize" . }}
 {{- include "grid-enrollment.validateHubSite" . }}
 {{- if include "grid-enrollment.bootstrapRuns" . }}
@@ -134,4 +135,8 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "grid-enrollment.rhoai.certs/ca-bootstrap-job.yaml" . }}
 {{- end }}

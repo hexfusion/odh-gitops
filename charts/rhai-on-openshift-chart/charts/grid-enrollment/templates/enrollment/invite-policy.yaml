@@ -1,3 +1,4 @@
+{{- define "grid-enrollment.rhoai.enrollment/invite-policy.yaml" -}}
 {{- /* Delivers each invited site its token, the CA bundle and the gossip key. The sites
        are already named in `invites`, so nothing is restated. */}}
 {{- include "grid-enrollment.normalize" . }}
@@ -103,4 +104,8 @@ spec:
             data:
               key: '{{ printf "{{hub fromSecret %q %q \"key\" hub}}" $ns ($.Values.hubSite.swimKeySecretName | default "grid-swim-key") }}'
 {{- end }}
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "grid-enrollment.rhoai.enrollment/invite-policy.yaml" . }}
 {{- end }}

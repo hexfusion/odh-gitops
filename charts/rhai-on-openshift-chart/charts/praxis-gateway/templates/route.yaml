@@ -1,3 +1,4 @@
+{{- define "praxis-gateway.rhoai.route.yaml" -}}
 {{- include "praxis-gateway.normalize" . }}
 {{- if .Values.route.enabled }}
 {{- $termination := .Values.route.tls.termination }}
@@ -52,4 +53,8 @@ spec:
     {{- end }}
     insecureEdgeTerminationPolicy: None
   wildcardPolicy: None
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "praxis-gateway.rhoai.route.yaml" . }}
 {{- end }}

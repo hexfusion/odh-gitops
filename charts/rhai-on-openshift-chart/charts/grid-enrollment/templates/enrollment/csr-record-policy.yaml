@@ -1,3 +1,4 @@
+{{- define "grid-enrollment.rhoai.enrollment/csr-record-policy.yaml" -}}
 {{- include "grid-enrollment.normalize" . }}
 {{- if and (eq .Values.enrollment.authz "kube") .Values.enrollment.csrRecord.enabled }}
 {{- if not .Values.enrollment.csrRecord.policy.enabled }}
@@ -83,4 +84,8 @@ metadata:
 spec:
   policyName: {{ $name }}-confine
   validationActions: [Deny]
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "grid-enrollment.rhoai.enrollment/csr-record-policy.yaml" . }}
 {{- end }}

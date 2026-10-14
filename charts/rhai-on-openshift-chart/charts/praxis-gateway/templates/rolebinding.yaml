@@ -1,3 +1,4 @@
+{{- define "praxis-gateway.rhoai.rolebinding.yaml" -}}
 {{- include "praxis-gateway.normalize" . }}
 {{- if and .Values.overlay.enabled .Values.overlay.sidecar.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
@@ -14,4 +15,8 @@ subjects:
   - kind: ServiceAccount
     name: {{ include "praxis-gateway.fullname" . }}-overlay-sync
     namespace: {{ .Release.Namespace }}
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "praxis-gateway.rhoai.rolebinding.yaml" . }}
 {{- end }}

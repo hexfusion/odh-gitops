@@ -1,3 +1,4 @@
+{{- define "praxis-gateway.rhoai.gateway-config.yaml" -}}
 {{- include "praxis-gateway.normalize" . }}
 {{- /*
 Secure-by-default: renders praxis.yaml (and policy.yaml with auth.mode api-key), never
@@ -13,4 +14,8 @@ metadata:
     {{- include "praxis-gateway.labels" . | nindent 4 }}
 data:
 {{- include "praxis-gateway.gatewayConfigData" . }}
+{{- end }}
+{{- end }}
+{{- if .Chart.IsRoot }}
+{{ include "praxis-gateway.rhoai.gateway-config.yaml" . }}
 {{- end }}

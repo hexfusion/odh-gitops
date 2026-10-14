@@ -47,7 +47,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/service.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -61,8 +61,9 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: enrollment
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/serviceaccount.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -75,8 +76,9 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: false
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/db/db-builtin.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -96,7 +98,7 @@ data:
     ssl_key_file = '/tls/server.key'
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/db/db-builtin.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -115,7 +117,7 @@ spec:
       storage: 8Gi
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/csr-record-rbac.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -139,7 +141,7 @@ rules:
     verbs: ["sign"]
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/csr-record-rbac.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -160,7 +162,7 @@ rules:
     verbs: ["approve"]
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/auth-rbac.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -180,8 +182,9 @@ subjects:
     name: grid-enrollment
     namespace: default
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/csr-record-rbac.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -202,7 +205,7 @@ subjects:
     namespace: default
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/csr-record-rbac.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -222,8 +225,9 @@ subjects:
     name: grid-enrollment
     namespace: default
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/grid-admin-rbac.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -246,7 +250,7 @@ rules:
 
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/grid-admin-rbac.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -263,8 +267,9 @@ rules:
     resources: ["enrollments"]
     verbs: ["get", "delete"]
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/role.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -281,8 +286,9 @@ rules:
     resourceNames: ["grid-routing"]
     verbs: ["get", "list", "watch"]
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/rolebinding.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -302,8 +308,9 @@ subjects:
     name: grid-gateway-overlay-sync
     namespace: default
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/db/db-builtin.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -326,7 +333,7 @@ spec:
       targetPort: postgres
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/service.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -352,7 +359,7 @@ spec:
       protocol: TCP
 
 ---
-# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/service.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -374,8 +381,9 @@ spec:
     app.kubernetes.io/name: praxis-gateway
     app.kubernetes.io/instance: release-test
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/db/db-builtin.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -469,8 +477,9 @@ spec:
           configMap:
             name: grid-enrollment-db-tls
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/deployment.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -603,8 +612,9 @@ spec:
           secret:
             secretName: grid-ca-bundle
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/deployment.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -794,6 +804,7 @@ spec:
                     - path: namespace
                       fieldRef:
                         fieldPath: metadata.namespace
+
 
 ---
 # Source: rhai-on-openshift-chart/templates/operator/dscinitialization.yaml
@@ -1034,7 +1045,7 @@ spec:
 
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/csr-record-policy.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -1062,7 +1073,7 @@ spec:
       reason: Forbidden
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/csr-record-policy.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -1090,7 +1101,7 @@ spec:
       reason: Forbidden
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/csr-record-policy.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
 metadata:
@@ -1106,7 +1117,7 @@ spec:
   validationActions: [Deny]
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/enrollment/csr-record-policy.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
 metadata:
@@ -1121,7 +1132,7 @@ spec:
   policyName: grid-enrollment-default-csr-record-confine
   validationActions: [Deny]
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/certs/ca-bootstrap-rbac.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -1139,7 +1150,7 @@ metadata:
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/certs/ca-bootstrap-rbac.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -1186,7 +1197,7 @@ rules:
     verbs: ["get", "patch"]
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/certs/ca-bootstrap-rbac.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -1211,8 +1222,9 @@ subjects:
     name: grid-enrollment-ca-bootstrap
     namespace: default
 
+
 ---
-# Source: rhai-on-openshift-chart/charts/praxis-gateway/templates/tests/gateway-ready.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -1254,7 +1266,7 @@ spec:
           nc -z -w5 grid-gateway 8080
 
 ---
-# Source: rhai-on-openshift-chart/charts/grid-enrollment/templates/certs/ca-bootstrap-job.yaml
+# Source: rhai-on-openshift-chart/templates/components/ai-grid.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
